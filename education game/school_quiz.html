@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pakistan School Quiz System</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --navy: #0d1b4b;
+  --blue: #1a56bb;
+  --gold: #f5a623;
+  --green: #22c55e;
+  --red: #ef4444;
+  --bg: #f0f4ff;
+  --white: #ffffff;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  color:var(--text);
+  background-image: radial-gradient(circle at 20% 20%, #c7d9ff 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, #fde8b0 0%, transparent 50%);
+}
+
+/* ===== HEADER ===== */
+.top-bar {
+  background: linear-gradient(135deg, var(--navy) 0%, #1a3a8f 100%);
+  color:white; padding:16px 24px;
+  display:flex; align-items:center; gap:14px;
+  box-shadow: 0 4px 20px rgba(13,27,75,0.3);
+}
+.top-bar .flag { font-size:28px; }
+.top-bar h1 { font-family:'Fredoka One'; font-size:1.5rem; letter-spacing:0.5px; }
+.top-bar p { font-size:0.8rem; opacity:0.8; margin-top:2px; }
+.top-bar .star { margin-left:auto; font-size:24px; animation: spin 4s linear infinite; }
+@keyframes spin { 100%{ transform:rotate(360deg); } }
+
+/* ===== SCREENS ===== */
+.screen { display:none; animation: fadeUp 0.4s ease; }
+.screen.active { display:block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+/* ===== FORM SCREEN ===== */
+.form-container {
+  max-width:680px; margin:30px auto; padding:20px;
+}
+.form-card {
+  background:white; border-radius:20px; padding:32px;
+  box-shadow: 0 8px 32px rgba(26,86,187,0.12);
+  border: 2px solid rgba(26,86,187,0.08);
+}
+.form-title {
+  font-family:'Fredoka One'; font-size:1.8rem; color:var(--navy);
+  text-align:center; margin-bottom:6px;
+}
+.form-subtitle {
+  text-align:center; color:var(--muted); margin-bottom:28px; font-size:0.9rem;
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.form-row.single { grid-template-columns:1fr; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group label {
+  font-weight:700; font-size:0.85rem; color:var(--navy);
+  display:flex; align-items:center; gap:6px;
+}
+.form-group label span { font-size:16px; }
+.form-group input, .form-group select {
+  padding:11px 14px; border:2px solid var(--border); border-radius:10px;
+  font-family:'Nunito'; font-size:0.95rem; color:var(--text);
+  transition:all 0.2s; outline:none; background:white;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color:var(--blue); box-shadow:0 0 0 3px rgba(26,86,187,0.1);
+}
+
+/* Photo Upload */
+.photo-upload-area {
+  border:3px dashed var(--border); border-radius:16px; padding:24px;
+  text-align:center; cursor:pointer; transition:all 0.3s;
+  background:var(--bg); margin-bottom:16px;
+}
+.photo-upload-area:hover { border-color:var(--blue); background:#eff6ff; }
+.photo-upload-area.has-photo { border-color:var(--green); background:#f0fdf4; }
+.photo-preview {
+  width:100px; height:100px; border-radius:50%; object-fit:cover;
+  border:3px solid var(--blue); display:none; margin:0 auto 8px;
+}
+.photo-upload-area.has-photo .photo-preview { display:block; }
+.photo-upload-area.has-photo .upload-placeholder { display:none; }
+.upload-placeholder p { font-size:0.9rem; color:var(--muted); margin-top:8px; }
+.upload-placeholder .icon { font-size:36px; }
+
+.btn-start {
+  width:100%; padding:15px; background:linear-gradient(135deg,#1a56bb,#0d1b4b);
+  color:white; border:none; border-radius:12px; font-family:'Fredoka One';
+  font-size:1.2rem; cursor:pointer; transition:all 0.3s; letter-spacing:0.5px;
+  box-shadow: 0 4px 15px rgba(26,86,187,0.35);
+}
+.btn-start:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(26,86,187,0.45); }
+
+/* ===== SUBJECT SELECTION ===== */
+.subj-container { max-width:680px; margin:30px auto; padding:20px; }
+.subj-card {
+  background:white; border-radius:20px; padding:32px;
+  box-shadow:0 8px 32px rgba(26,86,187,0.12);
+}
+.subj-title {
+  font-family:'Fredoka One'; font-size:1.6rem; color:var(--navy);
+  text-align:center; margin-bottom:6px;
+}
+.subj-info { text-align:center; color:var(--muted); margin-bottom:24px; font-size:0.9rem; }
+.subjects-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.subj-btn {
+  padding:18px 12px; border-radius:14px; border:2.5px solid var(--border);
+  background:white; cursor:pointer; text-align:center; transition:all 0.25s;
+  font-family:'Nunito'; font-weight:800;
+}
+.subj-btn:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+.subj-btn .icon { font-size:28px; display:block; margin-bottom:6px; }
+.subj-btn .name { font-size:1rem; color:var(--navy); display:block; }
+.subj-btn .qs { font-size:0.78rem; color:var(--muted); display:block; margin-top:2px; }
+.subj-btn.s-english { border-color:#3b82f6; }
+.subj-btn.s-urdu { border-color:#8b5cf6; }
+.subj-btn.s-math { border-color:#10b981; }
+.subj-btn.s-science { border-color:#f59e0b; }
+.subj-btn.s-sindhi { border-color:#ec4899; }
+.subj-btn.s-islamiyat { border-color:#14b8a6; }
+.subj-btn.s-computer { border-color:#6366f1; }
+.subj-btn.s-sst { border-color:#f97316; }
+.subj-btn.s-english:hover { background:#eff6ff; }
+.subj-btn.s-urdu:hover { background:#f5f3ff; }
+.subj-btn.s-math:hover { background:#ecfdf5; }
+.subj-btn.s-science:hover { background:#fffbeb; }
+.subj-btn.s-sindhi:hover { background:#fdf2f8; }
+.subj-btn.s-islamiyat:hover { background:#f0fdfa; }
+.subj-btn.s-computer:hover { background:#eef2ff; }
+.subj-btn.s-sst:hover { background:#fff7ed; }
+
+.btn-start-quiz {
+  width:100%; padding:14px; background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:white; border:none; border-radius:12px; font-family:'Fredoka One';
+  font-size:1.1rem; cursor:pointer; margin-top:20px; transition:all 0.3s;
+  box-shadow:0 4px 15px rgba(34,197,94,0.35);
+}
+.btn-start-quiz:hover { transform:translateY(-2px); }
+.btn-start-all {
+  width:100%; padding:14px; background:linear-gradient(135deg,var(--blue),var(--navy));
+  color:white; border:none; border-radius:12px; font-family:'Fredoka One';
+  font-size:1.1rem; cursor:pointer; margin-top:10px; transition:all 0.3s;
+}
+.btn-start-all:hover { transform:translateY(-2px); }
+
+/* ===== QUIZ SCREEN ===== */
+.quiz-container { max-width:700px; margin:20px auto; padding:20px; }
+.quiz-header {
+  background:linear-gradient(135deg,var(--navy),#1a3a8f);
+  border-radius:16px; padding:16px 20px; color:white; margin-bottom:20px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.quiz-subject { font-family:'Fredoka One'; font-size:1.3rem; display:flex; align-items:center; gap:8px; }
+.quiz-counter { background:rgba(255,255,255,0.15); border-radius:10px; padding:6px 14px; font-weight:700; }
+.progress-bar-wrap { background:rgba(255,255,255,0.2); border-radius:50px; height:8px; margin-top:12px; }
+.progress-bar { background:var(--gold); height:8px; border-radius:50px; transition:width 0.5s ease; }
+.subject-progress { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.subj-dot {
+  padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700;
+  background:white; border:2px solid var(--border); color:var(--muted);
+}
+.subj-dot.done { background:var(--green); border-color:var(--green); color:white; }
+.subj-dot.active { background:var(--blue); border-color:var(--blue); color:white; }
+
+.question-card {
+  background:white; border-radius:20px; padding:30px;
+  box-shadow:0 8px 32px rgba(26,86,187,0.1);
+}
+.q-num { color:var(--muted); font-size:0.85rem; font-weight:700; margin-bottom:10px; }
+.q-text {
+  font-size:1.15rem; font-weight:800; color:var(--navy); margin-bottom:24px;
+  line-height:1.5; direction:auto;
+}
+.options { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.option-btn {
+  padding:14px 16px; border-radius:12px; border:2.5px solid var(--border);
+  background:white; cursor:pointer; text-align:left; font-family:'Nunito';
+  font-weight:700; font-size:0.95rem; color:var(--text); transition:all 0.2s;
+  display:flex; align-items:center; gap:10px; direction:auto;
+}
+.option-btn:hover:not(.disabled) {
+  border-color:var(--blue); background:#eff6ff; transform:translateY(-2px);
+}
+.option-btn .opt-letter {
+  width:28px; height:28px; border-radius:50%; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.8rem; font-weight:900; flex-shrink:0; border:2px solid var(--border);
+}
+.option-btn.correct { border-color:var(--green); background:#f0fdf4; color:#166534; }
+.option-btn.correct .opt-letter { background:var(--green); border-color:var(--green); color:white; }
+.option-btn.wrong { border-color:var(--red); background:#fef2f2; color:#991b1b; }
+.option-btn.wrong .opt-letter { background:var(--red); border-color:var(--red); color:white; }
+.option-btn.disabled { cursor:default; }
+.option-btn.show-correct { border-color:var(--green); background:#f0fdf4; color:#166534; }
+.option-btn.show-correct .opt-letter { background:var(--green); border-color:var(--green); color:white; }
+
+.feedback-bar {
+  margin-top:16px; padding:12px 16px; border-radius:10px; font-weight:700;
+  display:none; align-items:center; gap:8px;
+}
+.feedback-bar.correct { background:#f0fdf4; color:#166534; display:flex; }
+.feedback-bar.wrong { background:#fef2f2; color:#991b1b; display:flex; }
+
+.btn-next {
+  width:100%; padding:14px; background:linear-gradient(135deg,var(--blue),var(--navy));
+  color:white; border:none; border-radius:12px; font-family:'Fredoka One';
+  font-size:1.1rem; cursor:pointer; margin-top:16px; transition:all 0.3s;
+  display:none;
+}
+.btn-next.show { display:block; }
+.btn-next:hover { transform:translateY(-2px); }
+
+/* ===== RESULTS SCREEN ===== */
+.results-container { max-width:780px; margin:20px auto; padding:20px; }
+.results-card {
+  background:white; border-radius:24px;
+  box-shadow:0 8px 40px rgba(26,86,187,0.15); overflow:hidden;
+}
+.results-top {
+  background:linear-gradient(135deg,var(--navy),#1a3a8f);
+  padding:30px; color:white; text-align:center;
+}
+.results-top h2 { font-family:'Fredoka One'; font-size:2rem; margin-bottom:4px; }
+.results-top p { opacity:0.8; font-size:0.9rem; }
+.results-body { padding:28px; }
+
+.student-info-row {
+  display:flex; gap:20px; align-items:center; margin-bottom:24px;
+  background:var(--bg); border-radius:14px; padding:16px;
+}
+.student-photo {
+  width:80px; height:80px; border-radius:50%; object-fit:cover;
+  border:3px solid var(--blue); flex-shrink:0;
+}
+.student-photo-placeholder {
+  width:80px; height:80px; border-radius:50%; background:#dbeafe;
+  display:flex; align-items:center; justify-content:center; font-size:32px;
+  border:3px solid var(--blue); flex-shrink:0;
+}
+.student-details { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.detail-item { }
+.detail-item .label { font-size:0.75rem; color:var(--muted); font-weight:700; }
+.detail-item .value { font-size:0.95rem; font-weight:800; color:var(--navy); }
+
+.results-table { width:100%; border-collapse:collapse; margin-bottom:24px; }
+.results-table th {
+  background:var(--navy); color:white; padding:12px 14px; text-align:left;
+  font-size:0.85rem; font-weight:700;
+}
+.results-table th:first-child { border-radius:10px 0 0 0; }
+.results-table th:last-child { border-radius:0 10px 0 0; }
+.results-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.9rem; }
+.results-table tr:hover td { background:#f8faff; }
+.grade-badge {
+  display:inline-block; padding:3px 10px; border-radius:20px;
+  font-weight:800; font-size:0.85rem;
+}
+.grade-a-plus { background:#dcfce7; color:#166534; }
+.grade-a { background:#dbeafe; color:#1e40af; }
+.grade-b-plus { background:#ede9fe; color:#6d28d9; }
+.grade-b { background:#fef9c3; color:#854d0e; }
+.grade-c { background:#ffedd5; color:#9a3412; }
+.grade-d { background:#fee2e2; color:#991b1b; }
+.grade-f { background:#374151; color:white; }
+
+.overall-box {
+  background:linear-gradient(135deg,#f0f4ff,#e0eaff); border-radius:16px; padding:20px;
+  display:flex; justify-content:space-around; text-align:center; margin-bottom:20px;
+  border:2px solid rgba(26,86,187,0.15);
+}
+.overall-stat .num { font-family:'Fredoka One'; font-size:2.2rem; color:var(--navy); }
+.overall-stat .lbl { font-size:0.8rem; color:var(--muted); font-weight:700; margin-top:2px; }
+.remarks-box {
+  background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:14px; padding:16px;
+  text-align:center; margin-bottom:20px; border:2px solid #f59e0b;
+}
+.remarks-box .r-label { font-size:0.8rem; color:#92400e; font-weight:700; margin-bottom:4px; }
+.remarks-box .r-text { font-family:'Fredoka One'; font-size:1.4rem; color:#78350f; }
+
+.btn-pdf {
+  width:100%; padding:16px; background:linear-gradient(135deg,#dc2626,#991b1b);
+  color:white; border:none; border-radius:14px; font-family:'Fredoka One';
+  font-size:1.2rem; cursor:pointer; transition:all 0.3s;
+  box-shadow:0 4px 15px rgba(220,38,38,0.35); display:flex;
+  align-items:center; justify-content:center; gap:10px;
+}
+.btn-pdf:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(220,38,38,0.45); }
+.btn-retry {
+  width:100%; padding:13px; background:white; color:var(--navy);
+  border:2.5px solid var(--navy); border-radius:14px; font-family:'Fredoka One';
+  font-size:1.1rem; cursor:pointer; margin-top:10px; transition:all 0.3s;
+}
+.btn-retry:hover { background:var(--bg); }
+
+/* ===== PDF HIDDEN TEMPLATE ===== */
+#pdf-template {
+  display:none; position:fixed; left:-9999px; top:0;
+  width:794px; background:white; font-family:'Nunito',sans-serif;
+  color:#1e293b; padding:0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:600px) {
+  .form-row { grid-template-columns:1fr; }
+  .subjects-grid { grid-template-columns:1fr 1fr; }
+  .options { grid-template-columns:1fr; }
+  .student-details { grid-template-columns:1fr; }
+  .overall-box { flex-direction:column; gap:16px; }
+  .results-table { font-size:0.8rem; }
+  .results-table th, .results-table td { padding:8px 10px; }
+}
+
+/* LOADING */
+.loading-overlay {
+  position:fixed; inset:0; background:rgba(13,27,75,0.85);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; z-index:1000; gap:16px;
+}
+.loading-overlay.active { display:flex; }
+.spinner {
+  width:50px; height:50px; border:4px solid rgba(255,255,255,0.3);
+  border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite;
+}
+.loading-overlay p { color:white; font-family:'Fredoka One'; font-size:1.2rem; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="flag">🇵🇰</span>
+  <div>
+    <h1>Pakistan School Quiz System</h1>
+    <p>Classes 1 – 10 | آن لائن امتحان</p>
+  </div>
+  <span class="star">⭐</span>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingMsg">PDF بن رہا ہے...</p>
+</div>
+
+<!-- ==================== SCREEN 1: FORM ==================== -->
+<div class="screen active" id="screen-form">
+  <div class="form-container">
+    <div class="form-card">
+      <div class="form-title">📋 Student Registration</div>
+      <div class="form-subtitle">پہلے اپنی معلومات بھریں — پھر امتحان شروع کریں</div>
+
+      <!-- Photo Upload -->
+      <div class="photo-upload-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+        <img class="photo-preview" id="photoPreview" src="" alt="Student Photo">
+        <div class="upload-placeholder">
+          <div class="icon">📸</div>
+          <p><strong>اپنی تصویر لگائیں</strong><br>یہاں کلک کریں (اختیاری)</p>
+        </div>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span>👤</span> Student Name <span style="color:red">*</span></label>
+          <input type="text" id="studentName" placeholder="e.g. Ahmed Ali" required>
+        </div>
+        <div class="form-group">
+          <label><span>👨</span> Father's Name <span style="color:red">*</span></label>
+          <input type="text" id="fatherName" placeholder="e.g. Ali Hassan" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><span>🏫</span> Class <span style="color:red">*</span></label>
+          <select id="studentClass">
+            <option value="">-- Select Class --</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><span>🔢</span> Roll Number <span style="color:red">*</span></label>
+          <input type="text" id="rollNum" placeholder="e.g. 2024-001">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label><span>📅</span> Date</label>
+          <input type="date" id="examDate">
+        </div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">🚀 Start Exam — امتحان شروع کریں</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 2: SUBJECT SELECTION ==================== -->
+<div class="screen" id="screen-subjects">
+  <div class="subj-container">
+    <div class="subj-card">
+      <div class="subj-title">📚 Subjects — مضامین</div>
+      <div class="subj-info" id="subjInfo">Choose your subjects or start all at once</div>
+      <div class="subjects-grid" id="subjectsGrid"></div>
+      <button class="btn-start-all" onclick="startAllSubjects()">🎯 تمام مضامین کا امتحان دیں</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 3: QUIZ ==================== -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <div>
+        <div class="quiz-subject" id="quizSubjectTitle">📖 English</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="quiz-counter" id="quizCounter">1 / 10</div>
+    </div>
+    <div class="subject-progress" id="subjectProgress"></div>
+    <div class="question-card">
+      <div class="q-num" id="qNum">Question 1 of 10</div>
+      <div class="q-text" id="qText">Loading...</div>
+      <div class="options" id="optionsDiv"></div>
+      <div class="feedback-bar" id="feedbackBar"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">اگلا سوال ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 4: RESULTS ==================== -->
+<div class="screen" id="screen-results">
+  <div class="results-container">
+    <div class="results-card">
+      <div class="results-top">
+        <h2>🎉 نتائج — Results</h2>
+        <p>Your exam is complete! Check your performance below.</p>
+      </div>
+      <div class="results-body" id="resultsBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF TEMPLATE (hidden) -->
+<div id="pdf-template"></div>
+
+<script>
+// ============================================================
+//  QUESTION BANK
+// ============================================================
+const QB = {
+  English: {
+    1: [
+      {q:"Which letter comes FIRST in the English alphabet?", o:["B","A","C","Z"], a:1},
+      {q:"How many vowels are in the English alphabet?", o:["3","4","5","6"], a:2},
+      {q:"What is the opposite of 'hot'?", o:["Warm","Cold","Dry","Wet"], a:1},
+      {q:"Which word is a COLOR?", o:["Apple","Run","Red","Sing"], a:2},
+      {q:"Which animal says 'meow'?", o:["Dog","Cat","Cow","Bird"], a:1},
+      {q:"Choose the correct spelling:", o:["Apperl","Appel","Apple","Appal"], a:2},
+      {q:"How many letters are in the word 'BOOK'?", o:["3","5","6","4"], a:3},
+      {q:"Where do children go to study?", o:["Hospital","Market","School","Farm"], a:2},
+      {q:"'She ___ happy.' Fill in the blank:", o:["am","are","is","be"], a:2},
+      {q:"Which animal gives us milk?", o:["Dog","Cat","Fish","Cow"], a:3},
+      {q:"What comes after Monday?", o:["Sunday","Wednesday","Tuesday","Saturday"], a:2},
+      {q:"How many months are in a year?", o:["10","11","13","12"], a:3},
+      {q:"Which word means 'not big'?", o:["Tall","Long","Wide","Small"], a:3},
+      {q:"The sun rises in the ___ :", o:["West","North","South","East"], a:3},
+      {q:"Which of these is a FRUIT?", o:["Chair","Book","Pen","Apple"], a:3},
+    ],
+    2: [
+      {q:"Which sentence is grammatically CORRECT?", o:["She go to school","She going school","She goes to school","She gone school"], a:2},
+      {q:"What is a NOUN?", o:["Action word","Describing word","Joining word","Name of a person/place/thing"], a:3},
+      {q:"Plural of 'child' is:", o:["Childs","Childrens","Child","Children"], a:3},
+      {q:"Which word is an ADJECTIVE?", o:["Run","Quickly","And","Happy"], a:3},
+      {q:"'The book is ___ the table.' Correct preposition:", o:["on","from","to","by"], a:0},
+      {q:"'She played cricket yesterday.' What TENSE is this?", o:["Present","Future","Perfect","Past"], a:3},
+      {q:"Antonym of 'ancient':", o:["Old","Tall","Wide","Modern"], a:3},
+      {q:"Which is a COMPOUND word?", o:["Happy","Running","Quickly","Sunshine"], a:3},
+      {q:"'He is ___ honest man.' Fill in:", o:["a","the","no article","an"], a:3},
+      {q:"What is a VERB?", o:["Name word","Describing word","Joining word","Action word"], a:3},
+      {q:"Synonym of 'big':", o:["Small","Tiny","Short","Large"], a:3},
+      {q:"Which punctuation ends a question?", o:[".","!",",","?"], a:3},
+      {q:"A word that replaces a noun is called:", o:["Verb","Adjective","Adverb","Pronoun"], a:3},
+      {q:"Which is a PROPER noun?", o:["City","Dog","Book","Karachi"], a:3},
+      {q:"'They ___ going to school.' Fill in:", o:["is","am","was","are"], a:3},
+    ],
+    3: [
+      {q:"'Life is a journey.' This is a:", o:["Simile","Personification","Alliteration","Metaphor"], a:3},
+      {q:"Which sentence uses PASSIVE voice?", o:["She ate the cake","She eats cake","She will eat","The cake was eaten by her"], a:3},
+      {q:"'Benevolent' means:", o:["Cruel","Angry","Sad","Kind/Generous"], a:3},
+      {q:"'The stars danced in the sky.' This is:", o:["Simile","Metaphor","Hyperbole","Personification"], a:3},
+      {q:"Prefix 'un-' in 'unhappy' means:", o:["Very","Before","After","Not"], a:3},
+      {q:"Which is a COMPLEX sentence?", o:["She ran fast","She ran and jumped","Run fast","Although tired, she ran"], a:3},
+      {q:"He said,'I am going.' INDIRECT speech:", o:["He said he went","He says he is going","He told he goes","He said he was going"], a:3},
+      {q:"An OXYMORON contains:", o:["Similar sounds","Exaggeration","Comparison","Contradictory terms"], a:3},
+      {q:"Suffix '-tion' typically forms a:", o:["Verb","Adjective","Adverb","Noun"], a:3},
+      {q:"Superlative form of 'good':", o:["better","more good","most good","best"], a:3},
+      {q:"Which is a COLLECTIVE noun?", o:["Quickly","Run","Tall","Flock"], a:3},
+      {q:"'Swimming is healthy.' 'Swimming' is a:", o:["Verb","Adjective","Adverb","Gerund"], a:3},
+      {q:"Which is NOT a type of irony?", o:["Verbal","Dramatic","Situational","Structural"], a:3},
+      {q:"A SOLILOQUY is:", o:["Two characters talking","Group speech","Written letter","Character speaking thoughts aloud alone"], a:3},
+      {q:"Which sentence has a SUBORDINATE clause?", o:["She ran fast","She ran and jumped","Although it rained, we played","Sit down!"], a:2},
+    ],
+    4: [
+      {q:"Who wrote 'Pride and Prejudice'?", o:["Charlotte Brontë","Emily Dickinson","George Eliot","Jane Austen"], a:3},
+      {q:"Which Shakespeare play features IAGO?", o:["Hamlet","Macbeth","King Lear","Othello"], a:3},
+      {q:"The turning point in a story is called:", o:["Exposition","Resolution","Denouement","Climax"], a:3},
+      {q:"'Peter Piper picked...' This uses:", o:["Assonance","Rhyme","Consonance","Alliteration"], a:3},
+      {q:"'Ephemeral' means:", o:["Everlasting","Powerful","Ancient","Short-lived"], a:3},
+      {q:"Dramatic irony is when:", o:["Events are funny","Story has sad ending","Characters are dramatic","Reader knows what characters don't"], a:3},
+      {q:"A Petrarchan sonnet has ___ lines:", o:["12","16","18","14"], a:3},
+      {q:"'Carpe Diem' means:", o:["Seize the night","Love forever","Live and die","Seize the day"], a:3},
+      {q:"A story within a story is called:", o:["Allegory","Flashback","Foreshadowing","Frame narrative"], a:3},
+      {q:"Modernism in literature emphasized:", o:["Tradition and order","Simple plots","Happy endings","Experimentation and subjectivity"], a:3},
+      {q:"An 'unreliable narrator' means narrator whose:", o:["Speed is fast","Person is third","Person is first","Credibility is compromised"], a:3},
+      {q:"'Stream of consciousness' is a technique in:", o:["Poetry","Drama","Biography","Novel"], a:3},
+      {q:"Which rhetorical device: 'To be or not to be' uses:", o:["Epistrophe","Anaphora","Chiasmus","Antithesis"], a:3},
+      {q:"'Catharsis' in tragedy means:", o:["Character's death","Emotional purging in audience","Happy ending","Comic relief"], a:1},
+      {q:"A Shakespearean sonnet has ___ lines:", o:["12","16","18","14"], a:3},
+    ],
+  },
+  Urdu: {
+    1: [
+      {q:"اردو حروف تہجی میں کتنے حروف ہیں؟", o:["26","52","30","36"], a:3},
+      {q:"'آم' کیا ہے؟", o:["سبزی","جانور","رنگ","پھل"], a:3},
+      {q:"پاکستان کا قومی پھول کون سا ہے؟", o:["گلاب","سوسن","کنول","چنبیلی"], a:3},
+      {q:"پاکستان کے پرچم میں کون سے رنگ ہیں؟", o:["سرخ سفید","پیلا سبز","نارنجی سفید","سبز اور سفید"], a:3},
+      {q:"'الف' کے بعد کون سا حرف آتا ہے؟", o:["ج","د","ز","ب"], a:3},
+      {q:"ایک ہفتے میں کتنے دن ہوتے ہیں؟", o:["5","6","8","7"], a:3},
+      {q:"سورج کس وقت طلوع ہوتا ہے؟", o:["رات کو","دوپہر کو","شام کو","صبح کو"], a:3},
+      {q:"'کتاب' کہاں پڑھتے ہیں؟", o:["بازار","ہسپتال","کھیت","اسکول"], a:3},
+      {q:"'بلی' کیا ہے؟", o:["پرندہ","درخت","پھول","جانور"], a:3},
+      {q:"پاکستان کا دارالحکومت کون سا ہے؟", o:["لاہور","کراچی","پشاور","اسلام آباد"], a:3},
+      {q:"ایک سال میں کتنے مہینے ہوتے ہیں؟", o:["10","11","13","12"], a:3},
+      {q:"'گھوڑا' کیا ہے؟", o:["پرندہ","مچھلی","درخت","جانور"], a:3},
+      {q:"'پ' کے بعد کون سا حرف ہے؟", o:["ب","ج","چ","ت"], a:3},
+      {q:"پھول کس سے اُگتے ہیں؟", o:["پانی سے","ہوا سے","آسمان سے","زمین سے"], a:3},
+      {q:"'اُردو' پاکستان کی قومی زبان ہے؟", o:["نہیں","شاید","کبھی کبھی","ہاں"], a:3},
+    ],
+    2: [
+      {q:"'اسم' کی تعریف کیا ہے؟", o:["فعل کا نام","حالت بیان کرنا","حرف ربط","کسی شخص، جگہ یا چیز کا نام"], a:3},
+      {q:"'میں نے کھانا کھایا' میں فعل کون سا ہے؟", o:["میں","نے","کھانا","کھایا"], a:3},
+      {q:"'خوش' کا متضاد کیا ہے؟", o:["بہت خوش","خوشی","خوشحال","ناخوش"], a:3},
+      {q:"'کتابیں' کا واحد:", o:["کتابہ","کتابوں","کتابی","کتاب"], a:3},
+      {q:"علامہ اقبال کا مشہور کلام:", o:["شاہنامہ","دیوانِ غالب","مثنوی","لب پہ آتی ہے دعا"], a:3},
+      {q:"فعل ماضی کی مثال:", o:["وہ جائے گا","وہ جاتا ہے","وہ جا رہا ہے","وہ گیا"], a:3},
+      {q:"'اردو' کا رسم الخط:", o:["دیوناگری","لاطینی","فارسی رسم الخط (نستعلیق)","چینی"], a:2},
+      {q:"'شیر' کا مؤنث:", o:["بلی","گائے","بھیڑ","شیرنی"], a:3},
+      {q:"قومی ترانے کے خالق کون ہیں؟", o:["فیض احمد فیض","احمد ندیم قاسمی","غالب","حفیظ جالندھری"], a:3},
+      {q:"اردو میں 'اضافت' کا کیا مطلب ہے؟", o:["فعل کا حصہ","دو ناموں کا تعلق","ضمیر","جمع"], a:1},
+      {q:"'وہ گاتی ہے' میں ضمیر:", o:["گاتی","ہے","کوئی نہیں","وہ"], a:3},
+      {q:"'تیز' کا متضاد:", o:["کمزور","اونچا","چھوٹا","آہستہ"], a:3},
+      {q:"درست جملہ کون سا ہے؟", o:["وہ گیا اسکول","اسکول گیا وہ","اسکول وہ گیا","وہ اسکول گیا"], a:3},
+      {q:"غالب کا اصل نام:", o:["اکبر","احمد","مرزا اسداللہ خاں","محمد اقبال"], a:2},
+      {q:"اردو میں مذکر کی مثال:", o:["بچی","لڑکی","گائے","لڑکا"], a:3},
+    ],
+    3: [
+      {q:"میر تقی میر کس صنف کے استاد تھے؟", o:["نثر","ڈرامہ","افسانہ","غزل"], a:3},
+      {q:"'تشبیہ' میں کون سے الفاظ استعمال ہوتے ہیں؟", o:["جیسے، سا، سی","لیکن، مگر","اور، بھی","کیا، کیوں"], a:0},
+      {q:"اردو کا پہلا ناول:", o:["گودان","توبۃ النصوح","آنگن","علی پور کا ایلی"], a:1},
+      {q:"'آزاد نظم' کی خصوصیت:", o:["قافیہ ردیف لازمی","مخصوص وزن ضروری","وزن قافیہ نہیں ہوتا","صرف مذہبی موضوع"], a:2},
+      {q:"اردو میں 'استعارہ' کیا ہے؟", o:["تشبیہ کی قسم","حذف کا اصول","بالواسطہ تشبیہ","ردیف کا حصہ"], a:2},
+      {q:"اردو ادب میں 'دکنی دور' کب تھا؟", o:["19ویں صدی","17ویں صدی","14ویں صدی","16ویں-18ویں صدی"], a:3},
+      {q:"مولانا الطاف حسین حالی کی مشہور مسدس:", o:["شکوہ","مدوجزرِ اسلام","بانگِ درا","شعرِ عجم"], a:1},
+      {q:"'صنعت تضاد' میں:", o:["ایک جیسے الفاظ","الفاظ کی تکرار","متضاد الفاظ آتے ہیں","ردیف بدلتی ہے"], a:2},
+      {q:"اردو کا اولین شاعر:", o:["غالب","اقبال","میر","ولی دکنی"], a:3},
+      {q:"'قصیدہ' کس کی تعریف میں لکھا جاتا ہے؟", o:["محبوب","فطرت","کسی عظیم شخصیت","اللہ صرف"], a:2},
+      {q:"'مرثیہ' کس موضوع پر ہوتا ہے؟", o:["خوشی","محبت","فطرت","غم اور وفات"], a:3},
+      {q:"ترقی پسند تحریک کا آغاز:", o:["1947","1920","1960","1936"], a:3},
+      {q:"'داستان' اور 'ناول' میں فرق:", o:["داستان حقیقی، ناول فرضی","داستان مختصر ہوتی ہے","کوئی فرق نہیں","داستان فرضی طویل، ناول حقیقی"], a:3},
+      {q:"اقبال کی فارسی کتاب:", o:["بال جبریل","بانگ درا","ارمغانِ حجاز","پیامِ مشرق"], a:3},
+      {q:"'علامت نگاری' کا مطلب:", o:["تصویر بنانا","بے معنی لکھنا","خطاطی","علامتوں کے ذریعے مفہوم ادا کرنا"], a:3},
+    ],
+    4: [
+      {q:"غالب کا سب سے مشہور دیوان:", o:["کلیاتِ میر","بانگِ درا","کلیاتِ سودا","دیوانِ غالب"], a:3},
+      {q:"پاکستانی ادب میں 'منٹو' کی پہچان:", o:["شاعری","ناول","خودنوشت","افسانہ نگاری"], a:3},
+      {q:"'بیدل' کس دور کے شاعر ہیں؟", o:["جدید دور","استعماری دور","آزادی بعد","مغل دور"], a:3},
+      {q:"اردو نثر کے بانی:", o:["میر تقی میر","علامہ اقبال","سرسید احمد خاں","غالب"], a:2},
+      {q:"'سیر کا فن' کس صنف میں آتا ہے؟", o:["ناول","شاعری","ڈرامہ","سفرنامہ"], a:3},
+      {q:"جوش ملیح آبادی کا لقب:", o:["شاعرِ انقلاب","حکیمُ الامت","شاعرِ مشرق","مصورِ پاکستان"], a:0},
+      {q:"فیض احمد فیض کا مشہور شعری مجموعہ:", o:["بانگِ درا","نقشِ فریادی","ارمغانِ حجاز","پیامِ مشرق"], a:1},
+      {q:"'حبس' کا مطلب اردو میں:", o:["آزادی","ٹھنڈک","خوشی","گھٹن / قید"], a:3},
+      {q:"اردو قواعد میں 'حرفِ عطف':", o:["اسم","فعل","صفت","جوڑنے والا لفظ جیسے 'اور'"], a:3},
+      {q:"'مثنوی' کی خصوصیت:", o:["مردف اشعار","بے قافیہ","ہر شعر کا قافیہ الگ ہوتا ہے","صرف مذہبی"], a:2},
+      {q:"قرۃ العین حیدر کا مشہور ناول:", o:["میرا دکھ","راکھ","آگ کا دریا","اُداس نسلیں"], a:2},
+      {q:"'ابہام' کا ادبی مطلب:", o:["وضاحت","سادگی","تضاد","مبہم اور کئی معنی دینا"], a:3},
+      {q:"اردو میں 'اشتقاق' کا مطلب:", o:["ترجمہ کرنا","شعر لکھنا","الفاظ سے نئے الفاظ بنانا","قافیہ ملانا"], a:2},
+      {q:"'سرسید احمد خاں' نے کون سی تحریک چلائی؟", o:["خلافت تحریک","ترقی پسند تحریک","تحریکِ پاکستان","علی گڑھ تحریک"], a:3},
+      {q:"'انشائیہ' اور 'مضمون' میں فرق:", o:["کوئی فرق نہیں","انشائیہ مذہبی ہوتا ہے","انشائیہ ذاتی و دلچسپ، مضمون رسمی","مضمون چھوٹا ہوتا ہے"], a:2},
+    ],
+  },
+  Math: {
+    1: [
+      {q:"2 + 3 = ?", o:["4","6","7","5"], a:3},
+      {q:"10 - 4 = ?", o:["5","7","4","6"], a:3},
+      {q:"How many sides does a triangle have?", o:["2","4","5","3"], a:3},
+      {q:"5 × 2 = ?", o:["7","8","12","10"], a:3},
+      {q:"Which number is EVEN?", o:["3","5","7","4"], a:3},
+      {q:"What comes after 19?", o:["18","21","22","20"], a:3},
+      {q:"Half of 10 is:", o:["2","3","6","5"], a:3},
+      {q:"How many zeros in ONE HUNDRED (100)?", o:["1","3","4","2"], a:3},
+      {q:"3 + 3 + 3 = ?", o:["6","12","6","9"], a:3},
+      {q:"Which shape has 4 equal sides?", o:["Triangle","Circle","Rectangle","Square"], a:3},
+      {q:"20 ÷ 4 = ?", o:["4","6","8","5"], a:3},
+      {q:"Which number is LARGEST?", o:["45","54","44","53"], a:1},
+      {q:"7 × 3 = ?", o:["21","24","18","28"], a:0},
+      {q:"What is the place value of 3 in 35?", o:["3","300","Ones","Tens"], a:3},
+      {q:"Round 47 to nearest 10:", o:["40","60","30","50"], a:3},
+    ],
+    2: [
+      {q:"What is 15% of 200?", o:["25","40","20","30"], a:3},
+      {q:"Simplify: 3/6", o:["2/3","1/4","3/4","1/2"], a:3},
+      {q:"Area of rectangle: length=8, width=5 ?", o:["26","13","20","40"], a:3},
+      {q:"0.75 as a fraction:", o:["3/5","7/10","7/5","3/4"], a:3},
+      {q:"LCM of 4 and 6:", o:["24","10","8","12"], a:3},
+      {q:"What is 2³ ?", o:["6","5","9","8"], a:3},
+      {q:"Perimeter of square with side 7:", o:["14","21","49","28"], a:3},
+      {q:"(-5) + (+3) = ?", o:["8","-8","2","-2"], a:3},
+      {q:"Average of 10, 20, 30:", o:["30","25","15","20"], a:3},
+      {q:"HCF of 12 and 18:", o:["36","3","9","6"], a:3},
+      {q:"A ratio of 3:5. If first part = 12, second part = ?", o:["15","25","10","20"], a:3},
+      {q:"0.3 × 0.3 = ?", o:["0.9","0.009","0.06","0.09"], a:3},
+      {q:"√144 = ?", o:["11","13","14","12"], a:3},
+      {q:"Discount of 20% on Rs.500 = ?", o:["Rs.80","Rs.120","Rs.200","Rs.100"], a:3},
+      {q:"If 5x = 35, then x = ?", o:["5","8","6","7"], a:3},
+    ],
+    3: [
+      {q:"Solve: 2x + 5 = 13. x = ?", o:["3","5","6","4"], a:3},
+      {q:"Area of circle with radius 7 (π=22/7):", o:["154","44","88","132"], a:0},
+      {q:"tan 45° = ?", o:["0","√3","1/√2","1"], a:3},
+      {q:"Volume of cube with side 4 cm:", o:["16 cm³","32 cm³","12 cm³","64 cm³"], a:3},
+      {q:"Factorize: x² - 9:", o:["(x+3)(x-3)","(x-3)²","(x+9)(x-1)","(x+3)²"], a:0},
+      {q:"Slope of line joining (0,0) and (3,6):", o:["1","3","½","2"], a:3},
+      {q:"In a triangle, two angles are 60° and 70°. Third angle:", o:["40°","60°","70°","50°"], a:3},
+      {q:"Simple Interest: P=1000, R=5%, T=2 years:", o:["Rs.50","Rs.200","Rs.150","Rs.100"], a:3},
+      {q:"x² + 6x + 9 = (x + ?)²", o:["6","9","4","3"], a:3},
+      {q:"sin 30° = ?", o:["1","√3/2","1/√2","1/2"], a:3},
+      {q:"The sum of angles in a quadrilateral:", o:["180°","270°","360°","540°"], a:2},
+      {q:"Pythagoras: In right triangle, hypotenuse=10, one side=6. Other side:", o:["4","7","9","8"], a:3},
+      {q:"Which is NOT a rational number?", o:["0.5","3/4","22/7","√2"], a:3},
+      {q:"log₁₀(100) = ?", o:["10","20","1","2"], a:3},
+      {q:"Distance formula between (0,0) and (3,4):", o:["4","6","7","5"], a:3},
+    ],
+    4: [
+      {q:"If sinθ = 3/5, then cosθ = ?", o:["3/4","5/3","3/5","4/5"], a:3},
+      {q:"Quadratic formula for ax²+bx+c=0 gives x =", o:["(-b±√b²-4ac)/2a","(-b±√b²+4ac)/2a","(b±√b²-4ac)/2a","(-b±√b²-4ac)/a"], a:0},
+      {q:"Derivative of x³ is:", o:["x²","3x","x³","3x²"], a:3},
+      {q:"Which is an identity: sin²θ + cos²θ = ?", o:["0","2","sinθ","1"], a:3},
+      {q:"∫x dx = ?", o:["x","2x","x³/3","x²/2"], a:3},
+      {q:"Arithmetic mean of 5 numbers summing to 75:", o:["25","10","20","15"], a:3},
+      {q:"Geometric sequence: 2, 6, 18... Common ratio:", o:["2","4","6","3"], a:3},
+      {q:"Matrix order of a 3×2 matrix:", o:["2 rows 3 cols","6×1","3 rows 2 cols","2×3"], a:2},
+      {q:"P(A∪B) = P(A) + P(B) - ? (Probability)", o:["P(A+B)","P(A)×P(B)","P(A∩B)","P(A-B)"], a:2},
+      {q:"The number of diagonals in a hexagon:", o:["6","12","15","9"], a:3},
+      {q:"Remainder when 2⁵ is divided by 3:", o:["0","3","1","2"], a:3},
+      {q:"cos 60° = ?", o:["1","√3/2","1/√2","1/2"], a:3},
+      {q:"Standard deviation measures:", o:["Central tendency","Average","Mode","Spread/dispersion"], a:3},
+      {q:"A circle's chord that passes through center:", o:["Arc","Tangent","Secant","Diameter"], a:3},
+      {q:"If f(x) = x² + 2, then f(3) = ?", o:["7","6","12","11"], a:3},
+    ],
+  },
+  Science: {
+    1: [
+      {q:"Which planet do we live on?", o:["Mars","Jupiter","Venus","Earth"], a:3},
+      {q:"Water boils at:", o:["50°C","80°C","90°C","100°C"], a:3},
+      {q:"Which sense organ do we use for smelling?", o:["Eyes","Ears","Tongue","Nose"], a:3},
+      {q:"Which of these is a living thing?", o:["Stone","Water","Plant","Sand"], a:2},
+      {q:"The sun gives us ___ and light:", o:["Cold","Wind","Rain","Heat"], a:3},
+      {q:"Bones in our body are covered by:", o:["Blood","Skin","Muscles","Both B & C"], a:3},
+      {q:"What do plants need to make food?", o:["Darkness","Rain only","Mud only","Sunlight, water & air"], a:3},
+      {q:"Which animal lives in water?", o:["Lion","Rabbit","Eagle","Fish"], a:3},
+      {q:"The heart pumps ___ through the body:", o:["Air","Water","Food","Blood"], a:3},
+      {q:"Day and night occur because Earth:", o:["Orbits the moon","Moves toward sun","Has two suns","Rotates on its axis"], a:3},
+      {q:"Which is NOT a source of light?", o:["Sun","Bulb","Fire","Stone"], a:3},
+      {q:"Caterpillar changes into a:", o:["Bird","Frog","Spider","Butterfly"], a:3},
+      {q:"Ice is water in ___ state:", o:["Gas","Liquid","Plasma","Solid"], a:3},
+      {q:"Which food gives us energy?", o:["Air","Water only","Salt","Bread/Rice"], a:3},
+      {q:"A thermometer measures:", o:["Weight","Height","Speed","Temperature"], a:3},
+    ],
+    2: [
+      {q:"What is the chemical formula of water?", o:["CO2","H2O2","O2","H2O"], a:3},
+      {q:"Photosynthesis occurs in:", o:["Roots","Flowers","Stems","Leaves"], a:3},
+      {q:"Newton's First Law is also called:", o:["Law of Gravity","Law of Motion","Law of Force","Law of Inertia"], a:3},
+      {q:"Which gas do plants absorb during photosynthesis?", o:["O2","N2","H2","CO2"], a:3},
+      {q:"The smallest unit of life:", o:["Atom","Organ","Tissue","Cell"], a:3},
+      {q:"Sound travels FASTEST in:", o:["Vacuum","Air","Water","Solid"], a:3},
+      {q:"Which blood cells fight infection?", o:["Red blood cells","Platelets","Plasma","White blood cells"], a:3},
+      {q:"Acid rain is caused by:", o:["Oxygen","CO2 only","N2","SO2 and NO2"], a:3},
+      {q:"The speed of light is approximately:", o:["3×10⁴ m/s","3×10⁶ m/s","3×10¹⁰ m/s","3×10⁸ m/s"], a:3},
+      {q:"Which organ controls the body?", o:["Heart","Lungs","Stomach","Brain"], a:3},
+      {q:"Friction can be REDUCED by:", o:["Adding more weight","Using rough surfaces","Using lubricants","Slowing down"], a:2},
+      {q:"Element symbol for Gold:", o:["Gd","Go","Ag","Au"], a:3},
+      {q:"Food chain always starts with:", o:["Carnivore","Decomposer","Herbivore","Producer (plant)"], a:3},
+      {q:"Mitosis produces ___ cells:", o:["4 haploid","2 haploid","4 identical","2 identical"], a:3},
+      {q:"The ozone layer protects us from:", o:["Rain","Cold","Wind","UV radiation"], a:3},
+    ],
+    3: [
+      {q:"Newton's Second Law: F = ?", o:["mv","m/a","v/a","ma"], a:3},
+      {q:"Which organelle is the 'powerhouse of the cell'?", o:["Ribosome","Nucleus","Chloroplast","Mitochondria"], a:3},
+      {q:"Ohm's Law states: V = ?", o:["I/R","R/I","I+R","IR"], a:3},
+      {q:"pH value of pure water:", o:["5","9","14","7"], a:3},
+      {q:"DNA stands for:", o:["Digital Nucleic Acid","Deoxyribose Nutrient Acid","Direct Nucleic Analysis","Deoxyribonucleic Acid"], a:3},
+      {q:"Which part of brain controls balance?", o:["Cerebrum","Medulla","Hypothalamus","Cerebellum"], a:3},
+      {q:"Work done = Force × ___:", o:["Mass","Time","Speed","Distance"], a:3},
+      {q:"Which waves are used in mobile phones?", o:["Sound waves","X-rays","Infrared","Microwaves/Radio waves"], a:3},
+      {q:"Metals react with acid to produce ___ gas:", o:["CO2","O2","N2","H2"], a:3},
+      {q:"Gravitational acceleration (g) ≈ ?", o:["5 m/s²","12 m/s²","15 m/s²","9.8 m/s²"], a:3},
+      {q:"Which is a biodegradable waste?", o:["Plastic","Glass","Metal","Food/Paper"], a:3},
+      {q:"Chromosomes are found in the cell's:", o:["Cytoplasm","Membrane","Ribosome","Nucleus"], a:3},
+      {q:"Type of bond in NaCl (salt):", o:["Covalent","Metallic","Hydrogen","Ionic"], a:3},
+      {q:"Kinetic Energy = ½ × m × ?", o:["v","a","a²","v²"], a:3},
+      {q:"Which vitamin is made by sunlight?", o:["Vitamin A","Vitamin C","Vitamin B","Vitamin D"], a:3},
+    ],
+    4: [
+      {q:"In photoelectric effect, electrons are emitted when ___ hits metal:", o:["Heat","Sound","Electricity","Light"], a:3},
+      {q:"Half-life is the time for radioactive material to lose ___ activity:", o:["All","3/4","1/4","Half"], a:3},
+      {q:"Which bond has highest energy?", o:["Ionic","Hydrogen","Van der Waals","Covalent triple bond"], a:3},
+      {q:"Entropy in thermodynamics measures:", o:["Heat","Energy","Temperature","Disorder/randomness"], a:3},
+      {q:"mRNA is produced during:", o:["Translation","Replication","Mutation","Transcription"], a:3},
+      {q:"In electrolysis of water, oxygen is produced at:", o:["Both electrodes","Neither","Cathode","Anode"], a:3},
+      {q:"Which law: 'Energy cannot be created or destroyed'?", o:["Newton's 1st","Thermodynamics 2nd","Newton's 2nd","Thermodynamics 1st"], a:3},
+      {q:"Acceleration due to gravity changes with:", o:["Color","Temperature","Altitude","Mass of object"], a:2},
+      {q:"Which particle has no charge?", o:["Proton","Electron","Ion","Neutron"], a:3},
+      {q:"Krebs cycle occurs in:", o:["Nucleus","Ribosome","Cytoplasm","Mitochondria"], a:3},
+      {q:"Which electromagnetic wave has HIGHEST frequency?", o:["Radio","Infrared","X-ray","Gamma ray"], a:3},
+      {q:"Le Chatelier's Principle deals with:", o:["Entropy","Reaction rates","Equilibrium shifts","Electron transfer"], a:2},
+      {q:"Mendel's Law of Segregation states:", o:["Genes skip generations","All traits mix","Only mothers pass genes","Alleles separate during gamete formation"], a:3},
+      {q:"Resistance of conductor increases when temperature:", o:["Is constant","Decreases","Has no effect","Increases"], a:3},
+      {q:"What is the atomic number of Carbon?", o:["8","4","14","6"], a:3},
+    ],
+  },
+  Islamiyat: {
+    1: [
+      {q:"Islam کے کتنے ارکان ہیں؟", o:["3","4","6","5"], a:3},
+      {q:"ہم روزانہ کتنی نمازیں پڑھتے ہیں؟", o:["3","4","6","5"], a:3},
+      {q:"قرآن مجید کتنے پاروں پر مشتمل ہے؟", o:["20","25","28","30"], a:3},
+      {q:"رمضان المبارک میں مسلمان کیا کرتے ہیں؟", o:["عید مناتے ہیں","حج کرتے ہیں","روزہ رکھتے ہیں","زکوٰۃ دیتے ہیں"], a:2},
+      {q:"حضرت محمد ﷺ کا وطن:", o:["مدینہ","طائف","یروشلم","مکہ مکرمہ"], a:3},
+      {q:"پہلی وحی کس غار میں نازل ہوئی؟", o:["غارِ ثور","غارِ احد","غارِ خیبر","غارِ حرا"], a:3},
+      {q:"پاکستان کا سرکاری مذہب:", o:["ہندو مت","بدھ مت","عیسائیت","اسلام"], a:3},
+      {q:"اسلام کے پہلے خلیفہ:", o:["حضرت عثمانؓ","حضرت علیؓ","حضرت عمرؓ","حضرت ابوبکر صدیقؓ"], a:3},
+      {q:"'بسم اللہ' کا مطلب:", o:["اللہ اکبر","سب سے بڑا اللہ","اللہ کے نام سے","الحمد للہ"], a:2},
+      {q:"مسجدِ نبوی کہاں ہے؟", o:["مکہ","طائف","یروشلم","مدینہ منورہ"], a:3},
+      {q:"حج کا مہینہ:", o:["رمضان","محرم","شعبان","ذوالحجہ"], a:3},
+      {q:"زکوٰۃ کتنے فیصد ہے؟", o:["5%","3%","10%","2.5%"], a:3},
+      {q:"قرآن مجید کی آخری سورت:", o:["الفاتحہ","الاخلاص","الفلق","الناس"], a:3},
+      {q:"صلوٰۃ الفجر کتنی رکعات:", o:["3","4","5","2"], a:3},
+      {q:"اسلامی کیلنڈر کا پہلا مہینہ:", o:["رجب","شعبان","صفر","محرم الحرام"], a:3},
+    ],
+    2: [
+      {q:"حضرت محمد ﷺ کی ولادت کا سال:", o:["571 CE","610 CE","622 CE","570 CE"], a:3},
+      {q:"ہجرتِ مدینہ کا سال:", o:["610 CE","615 CE","630 CE","622 CE"], a:3},
+      {q:"قرآن کریم کتنے سال میں نازل ہوا؟", o:["10","15","30","23"], a:3},
+      {q:"غزوہ بدر کب ہوا؟", o:["624 CE","625 CE","627 CE","630 CE"], a:0},
+      {q:"خاتم النبیین کا مطلب:", o:["پہلے نبی","سب سے عظیم نبی","آخری نبی","اللہ کے دوست"], a:2},
+      {q:"حضرت موسیٰ علیہ السلام کو کون سی کتاب دی گئی؟", o:["قرآن","انجیل","زبور","تورات"], a:3},
+      {q:"اسلام کے چھ ارکانِ ایمان میں شامل نہیں:", o:["فرشتوں پر ایمان","کتابوں پر ایمان","روزے پر ایمان","آخرت پر ایمان"], a:2},
+      {q:"مکہ مکرمہ کس ملک میں ہے؟", o:["عراق","مصر","ایران","سعودی عرب"], a:3},
+      {q:"'صحابی' کسے کہتے ہیں؟", o:["نبی کے بعد آنے والے","تابعی کے بعد","صرف خلفاء","جنہوں نے نبیﷺ کو دیکھا ایمان کے ساتھ"], a:3},
+      {q:"فتح مکہ کب ہوئی؟", o:["624 CE","625 CE","627 CE","630 CE"], a:3},
+      {q:"حضرت ابراہیم علیہ السلام کا تعلق:", o:["مدینہ","ایران","مصر","عراق/بابل"], a:3},
+      {q:"اسلامی سال میں کتنے مہینے ہیں؟", o:["10","11","13","12"], a:3},
+      {q:"قرآن کریم کی پہلی سورت:", o:["البقرہ","الاخلاص","الناس","الفاتحہ"], a:3},
+      {q:"حج کا پہلا رکن:", o:["سعی","طواف","رمی","احرام"], a:3},
+      {q:"'تقویٰ' کا مطلب:", o:["دولت","خوبصورتی","طاقت","اللہ سے ڈرنا اور پرہیزگاری"], a:3},
+    ],
+    3: [
+      {q:"حدیث کی سب سے مشہور کتاب:", o:["موطا امام مالک","سنن ابوداود","ترمذی","صحیح بخاری"], a:3},
+      {q:"اجتہاد کا مطلب:", o:["جنگ کرنا","روزہ رکھنا","نماز پڑھنا","اسلامی قانون میں علمی استدلال"], a:3},
+      {q:"'اجماع' کیا ہے؟", o:["قرآن کی آیت","ایک نبی کی سنت","حدیث کی قسم","امت کا اتفاق رائے"], a:3},
+      {q:"جہاد کی سب سے بڑی قسم:", o:["دشمن سے لڑنا","مال خرچ کرنا","علم پھیلانا","نفس سے جہاد"], a:3},
+      {q:"'ربا' کیا ہے؟", o:["زکوٰۃ","حلال کمائی","صدقہ","سود (Interest)"], a:3},
+      {q:"چاروں مذاہبِ فقہ میں شامل نہیں:", o:["حنفی","شافعی","جعفری","حنبلی"], a:2},
+      {q:"غزوہ احد میں مسلمانوں کی تعداد:", o:["313","700","10,000","1000"], a:1},
+      {q:"'نفاق' کا مطلب:", o:["صداقت","دشمنی","سخاوت","منافقت"], a:3},
+      {q:"حضرت عمرؓ کا لقب:", o:["صدیق","ذوالنورین","امین","فاروق"], a:3},
+      {q:"اسلام میں شراب:", o:["مکروہ ہے","جائز ہے کم مقدار میں","مباح ہے","حرام ہے"], a:3},
+      {q:"'توحید' کا مطلب:", o:["جہاد","نماز","اللہ کی وحدانیت","صدقہ"], a:2},
+      {q:"میثاقِ مدینہ کب ہوا؟", o:["627 CE","630 CE","625 CE","622 CE"], a:3},
+      {q:"قرآن کا پہلا ترجمہ کس زبان میں ہوا؟", o:["اردو","ترکی","لاطینی","فارسی"], a:3},
+      {q:"'صلہ رحمی' کا مطلب:", o:["دشمنی رکھنا","تجارت کرنا","رشتہ داروں سے اچھا سلوک","صدقہ دینا"], a:2},
+      {q:"اسلامی تاریخ میں 'دارالارقم' کیا تھا؟", o:["جنگ کا میدان","تجارتی مرکز","پہلی مدرسہ/تبلیغ کا مرکز","مدینہ کی مسجد"], a:2},
+    ],
+    4: [
+      {q:"'اجتہاد' کے لیے شرط ہے:", o:["صرف عربی جاننا","علمِ قرآن، حدیث، فقہ میں مہارت","مالدار ہونا","سیاسی طاقت"], a:1},
+      {q:"اسلامی قانون کے چار ماخذ بترتیب:", o:["سنت، قرآن، قیاس، اجماع","قیاس، قرآن، سنت، اجماع","اجماع، قیاس، قرآن، سنت","قرآن، سنت، اجماع، قیاس"], a:3},
+      {q:"'مرتد' کسے کہتے ہیں؟", o:["کافر","منافق","جو اسلام چھوڑ دے","مشرک"], a:2},
+      {q:"عقلِ کلام کا موضوع:", o:["فقہی مسائل","عبادات","اسلامی عقائد کا عقلی اثبات","تاریخ"], a:2},
+      {q:"حضرت علیؓ کی خلافت کا دور:", o:["632-634","634-644","644-656","656-661"], a:3},
+      {q:"'معتزلہ' فرقہ کیس بات پر یقین رکھتا تھا؟", o:["قدر و قضا","صرف حدیث","عقل کی برتری","تقلید"], a:2},
+      {q:"اسلام میں 'حلالہ' سے کیا مراد ہے؟", o:["حلال کھانا","طلاق کی قسم","ایک فقہی مسئلہ","صدقہ کی قسم"], a:2},
+      {q:"'وقف' کیا ہے؟", o:["ادھار لینا","تجارت","ٹیکس","اسلامی خیراتی ادارہ"], a:3},
+      {q:"اسلام میں 'شہادت' کی گواہی کے لیے شرط:", o:["صرف مرد ہو","مسلمان، عاقل، بالغ، عادل","عالم ہو","صرف بزرگ ہو"], a:1},
+      {q:"'قیاس' کا استعمال کب ہوتا ہے؟", o:["ہمیشہ","جب قرآن میں ہو","جب قرآن و سنت خاموش ہوں","کبھی نہیں"], a:2},
+      {q:"سلطنتِ عثمانیہ کا اسلامی کردار:", o:["صرف تجارت","اسلام کو پھیلانا اور خلافت کا قیام","صرف جنگیں","کوئی کردار نہیں"], a:1},
+      {q:"'زکوٰۃ' کس پر فرض ہے؟", o:["ہر مسلمان پر","صرف امیروں پر","نصاب رکھنے والے مسلمان پر","صرف تاجروں پر"], a:2},
+      {q:"'تفسیر بالرائے' کا مطلب:", o:["حدیث سے تفسیر","دوسری آیات سے تفسیر","اپنی رائے سے تفسیر","سلف سے تفسیر"], a:2},
+      {q:"'حدیثِ قدسی' کیا ہے؟", o:["صحابہ کے قول","قرآن کی آیت","تابعی کا قول","اللہ کا کلام نبیﷺ کے الفاظ میں"], a:3},
+      {q:"'فرض کفایہ' وہ عمل جو:", o:["سب پر فرض ہے","بالکل فرض نہیں","ایک نے کر لیا تو سب بری ذمہ","صرف علماء پر فرض"], a:2},
+    ],
+  },
+  SST: {
+    1: [
+      {q:"پاکستان کا دارالحکومت کون سا ہے؟", o:["لاہور","کراچی","پشاور","اسلام آباد"], a:3},
+      {q:"پاکستان کتنے صوبوں پر مشتمل ہے؟", o:["3","5","6","4"], a:3},
+      {q:"پاکستان کا سب سے بڑا شہر:", o:["اسلام آباد","لاہور","پشاور","کراچی"], a:3},
+      {q:"پاکستان کی قومی زبان:", o:["پنجابی","سندھی","پشتو","اردو"], a:3},
+      {q:"پاکستان کا قومی جانور:", o:["شیر","بھینسا","ہرن","مارخور"], a:3},
+      {q:"پاکستان کس براعظم میں ہے؟", o:["افریقہ","یورپ","آسٹریلیا","ایشیا"], a:3},
+      {q:"پاکستان کا آزادی کا دن:", o:["25 دسمبر","23 مارچ","6 ستمبر","14 اگست"], a:3},
+      {q:"پاکستان کے پہلے گورنر جنرل:", o:["لیاقت علی خاں","سکندر مرزا","پرویز مشرف","قائداعظم محمد علی جناح"], a:3},
+      {q:"دریائے سندھ کہاں سے نکلتا ہے؟", o:["ہندوستان","افغانستان","چین","تبت/ہمالیہ"], a:3},
+      {q:"K-2 کہاں ہے؟", o:["بلوچستان","سندھ","پنجاب","گلگت بلتستان"], a:3},
+      {q:"پاکستان کی سرحدیں کتنے ممالک سے ملتی ہیں؟", o:["2","3","5","4"], a:3},
+      {q:"پاکستان کا قومی پھول:", o:["گلاب","کنول","سوسن","چنبیلی"], a:3},
+      {q:"پنجاب صوبے کا دارالخلافہ:", o:["ملتان","فیصل آباد","راولپنڈی","لاہور"], a:3},
+      {q:"سب سے بڑا براعظم کون سا ہے؟", o:["افریقہ","یورپ","آسٹریلیا","ایشیا"], a:3},
+      {q:"پاکستان کا قومی درخت:", o:["کیکر","چنار","پیپل","دیودار"], a:3},
+    ],
+    2: [
+      {q:"تحریکِ پاکستان کا آغاز کس نے کیا؟", o:["علامہ اقبال","سر آغا خاں","لیاقت علی خاں","قائداعظم محمد علی جناح"], a:3},
+      {q:"قراردادِ پاکستان کب منظور ہوئی؟", o:["1947","1930","1940","1906"], a:2},
+      {q:"پاکستان کا آئین پہلی بار کب بنا؟", o:["1947","1956","1970","1973"], a:1},
+      {q:"دنیا کی سب سے بڑی نمک کی کان:", o:["ہنزہ","چترال","ملتان","کھیوڑہ"], a:3},
+      {q:"پاکستان میں سب سے زیادہ گندم پیدا ہوتی ہے:", o:["سندھ","بلوچستان","خیبرپختونخوا","پنجاب"], a:3},
+      {q:"گوادر کس صوبے میں ہے؟", o:["سندھ","پنجاب","KPK","بلوچستان"], a:3},
+      {q:"پاکستان کا سب سے اونچا پہاڑ:", o:["نانگا پربت","راکاپوشی","تیریچ میر","K-2"], a:3},
+      {q:"1965ء کی جنگ کس ملک سے ہوئی؟", o:["افغانستان","ایران","روس","بھارت"], a:3},
+      {q:"اقوامِ متحدہ کا مرکز:", o:["لندن","جنیوا","واشنگٹن","نیویارک"], a:3},
+      {q:"پاکستان کب ایٹمی طاقت بنا؟", o:["1988","1990","2000","1998"], a:3},
+      {q:"سب سے بڑا صوبہ رقبے کے اعتبار سے:", o:["سندھ","پنجاب","KPK","بلوچستان"], a:3},
+      {q:"SAARC کی بنیاد کب رکھی گئی؟", o:["1975","1990","1947","1985"], a:3},
+      {q:"پاکستان کا سب سے بڑا ہوائی اڈا:", o:["لاہور","اسلام آباد","پشاور","کراچی (JIAP)"], a:3},
+      {q:"مون سون کا موسم کب آتا ہے؟", o:["جنوری-مارچ","اکتوبر-دسمبر","مارچ-مئی","جولائی-اگست"], a:3},
+      {q:"سیاچن گلیشیر کہاں ہے؟", o:["سندھ","بلوچستان","پنجاب","گلگت بلتستان"], a:3},
+    ],
+    3: [
+      {q:"پاکستان کا آئین 1973ء کب نافذ ہوا؟", o:["1971","1975","1977","1973"], a:3},
+      {q:"وفاقی حکومت کا سربراہ:", o:["صدر","چیف جسٹس","آرمی چیف","وزیراعظم"], a:3},
+      {q:"پاکستان میں پارلیمنٹ کے کتنے ایوان ہیں؟", o:["1","3","4","2"], a:3},
+      {q:"CPEC کا پورا نام:", o:["China Pakistan Economic Charter","China Pakistan East Corridor","Central Pakistan Economic Corridor","China Pakistan Economic Corridor"], a:3},
+      {q:"پاکستانی معیشت کا اہم ستون:", o:["صنعت صرف","تیل","کان کنی","زراعت"], a:3},
+      {q:"'گرین ہاؤس گیس' کا اثر:", o:["زمین ٹھنڈی ہوتی ہے","زلزلہ آتا ہے","بارش بڑھتی ہے","عالمی درجۂ حرارت بڑھتا ہے"], a:3},
+      {q:"پاکستان کی قانون ساز اسمبلی:", o:["سپریم کورٹ","وفاقی کابینہ","صدارت","قومی اسمبلی و سینٹ"], a:3},
+      {q:"پاکستان میں بلدیاتی انتخاب کا مقصد:", o:["صوبائی حکومت بنانا","وزیراعظم کا انتخاب","مقامی حکومت کا قیام","صدر کا انتخاب"], a:2},
+      {q:"عالمی تجارتی ادارہ (WTO) کا مقصد:", o:["عسکری تعاون","سیاسی اتحاد","ماحول کا تحفظ","بین الاقوامی تجارت کا فروغ"], a:3},
+      {q:"برِاعظم افریقہ میں ممالک کی تعداد تقریباً:", o:["35","40","67","54"], a:3},
+      {q:"پاکستان کی آبادی تقریباً (2024):", o:["10 کروڑ","15 کروڑ","30 کروڑ","23 کروڑ"], a:3},
+      {q:"سرد جنگ (Cold War) کن کے درمیان تھی؟", o:["UK-France","India-Pakistan","China-Japan","USA-USSR"], a:3},
+      {q:"دریائے نیل کس براعظم میں ہے؟", o:["ایشیا","یورپ","آسٹریلیا","افریقہ"], a:3},
+      {q:"UN Security Council میں مستقل اراکین کی تعداد:", o:["7","10","3","5"], a:3},
+      {q:"پاکستان میں صوبائی خودمختاری کا آئینی بنیاد:", o:["18ویں ترمیم","8ویں ترمیم","آئین 1962","آئین 1956"], a:0},
+    ],
+    4: [
+      {q:"Human Development Index (HDI) کیا ناپتا ہے؟", o:["صرف GDP","صرف تعلیم","صرف آمدنی","تعلیم، صحت اور آمدنی"], a:3},
+      {q:"پاکستان میں وفاقی نظام (Federalism) کا مطلب:", o:["ایک مرکزی حکومت","صرف صوبے","فوجی حکومت","مرکز اور صوبوں میں اختیارات کی تقسیم"], a:3},
+      {q:"Geopolitics کا تعلق ہے:", o:["زراعت سے","تجارت سے","ادب سے","جغرافیہ اور سیاست کے تعلق سے"], a:3},
+      {q:"'بریکسٹ' (Brexit) کیا تھا؟", o:["چین کا سمندری منصوبہ","افغانستان سے امریکی واپسی","برطانیہ کا یورپی یونین سے اخراج","ناٹو کی توسیع"], a:2},
+      {q:"IMF کا مکمل نام:", o:["Internal Money Fund","International Market Fund","International Money Formula","International Monetary Fund"], a:3},
+      {q:"'کلائمٹ چینج' کا سب سے بڑا سبب:", o:["آتش فشاں","جنگل","سمندر","گرین ہاؤس گیسیں"], a:3},
+      {q:"پاکستان کا سب سے بڑا تجارتی پارٹنر:", o:["سعودی عرب","امریکہ","بھارت","چین"], a:3},
+      {q:"نیوکلیئر نان پرولیفیریشن ٹریٹی (NPT):", o:["معاشی معاہدہ","ایٹمی ہتھیاروں کا پھیلاؤ روکنا","فوجی اتحاد","تجارتی معاہدہ"], a:1},
+      {q:"ایشیا اور یورپ کے درمیان واقع ملک:", o:["چین","ایران","ترکیہ","روس"], a:2},
+      {q:"جمہوریت کی بنیادی خصوصیت:", o:["فوجی طاقت","مذہبی قانون","ڈکٹیٹر شپ","عوام کی حکومت"], a:3},
+      {q:"G-20 کیا ہے؟", o:["20 ایشیائی ممالک","20 اسلامی ممالک","نیوکلیائی طاقتیں","بڑی معیشتوں کا فورم"], a:3},
+      {q:"'پائیدار ترقی' (Sustainable Development) کا مطلب:", o:["تیز صنعتی ترقی","صرف ماحول کی حفاظت","ایٹمی توانائی","آنے والی نسلوں کی ضروریات کو نقصان پہنچائے بغیر ترقی"], a:3},
+      {q:"سقوطِ ڈھاکہ کب ہوا؟", o:["1965","1970","1973","1971"], a:3},
+      {q:"'شنگھائی کوآپریشن آرگنائزیشن' (SCO) میں پاکستان کب شامل ہوا؟", o:["2001","2010","2020","2017"], a:3},
+      {q:"عالمی آبادی تقریباً (2024):", o:["5 بلین","6 بلین","9 بلین","8 بلین"], a:3},
+    ],
+  },
+  Sindhi: {
+    2: [
+      {q:"سنڌي ٻوليءَ جو رسم الخط ڪهڙو آهي؟", o:["لاطيني","ديوناگري","فارسي-عربي (نستعليق)","چيني"], a:2},
+      {q:"'آم' کي سنڌيءَ ۾ ڇا چوندا آهيون؟", o:["انب","انگور","ليمو","ناشپاتي"], a:0},
+      {q:"سنڌ جو دارالحکومت:", o:["لاڙڪاڻو","مٺي","حيدرآباد","ڪراچي"], a:3},
+      {q:"درياءَ سنڌ جو ٻيو نالو:", o:["راوي","جهيلم","مهران","چناب"], a:2},
+      {q:"شاهه عبداللطيف ڀٽائيءَ جو ڄمڻ جو هنڌ:", o:["حيدرآباد","ٺٽو","ڪراچي","ڀٽ شاهه"], a:3},
+      {q:"سنڌيءَ ۾ 'ڪتاب' جو جمع:", o:["ڪتابن","ڪتابون","ڪتابو","ڪتابَ"], a:1},
+      {q:"سنڌ ۾ سڀ کان وڏو شهر:", o:["لاڙڪاڻو","حيدرآباد","سکر","ڪراچي"], a:3},
+      {q:"'شاهه جو رسالو' ڪنهن لکيو؟", o:["سچل سرمست","شاهه عبداللطيف ڀٽائي","روحل فقير","سامي"], a:1},
+      {q:"سنڌيءَ ۾ 'اسڪول' کي ڇا چوندا آهيون؟", o:["دڪان","اسپتال","هوٽل","مدرسو/اسڪول"], a:3},
+      {q:"سنڌ جو صوبائي گل ڪهڙو آهي؟", o:["گلاب","سمن","ڪنول","چمبيلي"], a:1},
+      {q:"'وڻ' جو جمع سنڌيءَ ۾:", o:["وڻو","وڻوءَ","وڻاري","وڻ"], a:3},
+      {q:"سنڌيءَ ۾ 'ماءُ' ڪنهن کي چوندا آهيون؟", o:["ڀيڻ","ڌيءَ","خالا","ماءُ = ماء"], a:3},
+      {q:"سنڌ جو روايتي لباس:", o:["شلوار قميص صرف","ساڙي","اجرڪ ۽ سنڌي ٽوپي","خانچو"], a:2},
+      {q:"'درياهه' سنڌيءَ ۾ مذڪر آهي يا مؤنث؟", o:["مؤنث","ٻنهي","نه مذڪر نه مؤنث","مذڪر"], a:3},
+      {q:"'مهراڻ' ڪنهن درياهه جو قديم نالو آهي؟", o:["راوي","جهيلم","چناب","سنڌو"], a:3},
+    ],
+    3: [
+      {q:"'وائي' سنڌي شاعريءَ ۾ ڪهڙي صنف آهي؟", o:["نثر","ناول","ڊراما","صوفياڻي شاعريءَ جي قسم"], a:3},
+      {q:"سچل سرمست جو اصل نالو:", o:["عبداللطيف","سامي","سنگهه","عبدالوهاب"], a:3},
+      {q:"سنڌيءَ ۾ 'اسم' جي ڪيتريون قسمون آهن؟", o:["2","5","7","3"], a:3},
+      {q:"شاهه لطيف جي 'رسالي' ۾ ڪيترا سر آهن؟", o:["15","24","18","30"], a:1},
+      {q:"سنڌ ۾ 'ٿر' ڇا آهي؟", o:["شهر","درياهه","پهاڙ","صحرا"], a:3},
+      {q:"سنڌيءَ ۾ فعل ماضي جي مثال:", o:["هو وڃي ٿو","هو ويندو","هو وڃ","هو ويو"], a:3},
+      {q:"'بهٽائي' لفظ جو مطلب:", o:["شهر","پهاڙ","ماڻهو","ڀٽ/ريت وارو علائقو"], a:3},
+      {q:"سنڌيءَ ۾ مؤنث جي مثال:", o:["ڪتو","گهوڙو","مڇ","ڀيڻ"], a:3},
+      {q:"سنڌ جي قديم تمدن جو مرڪز:", o:["لاڙڪاڻو","حيدرآباد","ڪراچي","موهن جو دڙو"], a:3},
+      {q:"'اجرڪ' ڇا آهي؟", o:["کاڌو","هٿيار","موسيقي","سنڌ جو روايتي ڪپڙو"], a:3},
+      {q:"سنڌيءَ گرامر ۾ 'اضافت' ڪيئن ظاهر ٿئي؟", o:["'۽' سان","'جو/جي/جا' سان","'ئي' سان","'ته' سان"], a:1},
+      {q:"'لاکو پهاري' ڪنهن صنف جو ڪردار آهي؟", o:["ناول","صوفياڻي شاعري","لوڪ ڪهاڻي","سنگت"], a:2},
+      {q:"سنڌ جو ٻيو وڏو شهر:", o:["سکر","لاڙڪاڻو","ٺٽو","حيدرآباد"], a:3},
+      {q:"'ڪافي' صنف سنڌي شاعريءَ ۾:", o:["نثري صنف","محبت جي شاعري صرف","وائي جهڙي صوفياڻي گيت","داستان"], a:2},
+      {q:"سنڌيءَ ۾ 'توهان' ڪنهن لاءِ استعمال ٿئي ٿو؟", o:["دشمن لاءِ","پاڻ لاءِ","جانورن لاءِ","ادب وارو مخاطب"], a:3},
+    ],
+    4: [
+      {q:"سنڌيءَ ادب ۾ 'داستان' جو خالق سمجهيو وڃي ٿو:", o:["شاهه لطيف","سچل","مرزا قليچ بيگ","سامي"], a:2},
+      {q:"'مرزا قليچ بيگ' سنڌيءَ ۾ ڇا آڻيو؟", o:["صوفياڻي شاعري","قصيدو","لوڪ ڪهاڻيون","جديد نثر ۽ ناول"], a:3},
+      {q:"سنڌي ٻوليءَ جو قديم ترين نالو:", o:["مهراڻي","لاڙي","ويدڪ سنسڪرت","سنڌي"], a:0},
+      {q:"سنڌيءَ ۾ 'استعارو' ڇا آهي؟", o:["سڌي تشبيهه","ٽيون شخص","بالواسطي تشبيهه","قافيو"], a:2},
+      {q:"'رومانوي تحريڪ' سنڌيءَ ادب ۾ ڪڏهن آئي؟", o:["19هين صديءَ ۾","مغل دور ۾","آزاديءَ کان پوءِ","قديم دور ۾"], a:0},
+      {q:"سنڌي قواعد ۾ 'فاعل' کي ڇا چوندا آهيون؟", o:["مفعول","ڪرت","فعل","صفت"], a:1},
+      {q:"'ڪارو ڪوهستان' سنڌيءَ ادب ۾ ڪهڙي موضوع تي آهي؟", o:["تجارت","مذهب","رومانس","قبائلي زندگي"], a:3},
+      {q:"سنڌيءَ لوڪ ادب ۾ 'ماڻهو' جي زندگيءَ کي ظاهر ڪندڙ صنف:", o:["قصيدو","غزل","مرثيو","لوڪ گيت"], a:3},
+      {q:"'سنڌي ادبي سنگت' جو قيام:", o:["1930","1960","1975","1948"], a:3},
+      {q:"سنڌيءَ گرامر ۾ 'حرف عطف':", o:["جي","تي","ته","۽"], a:3},
+      {q:"'هاري' سنڌي ادب ۾ ڪنهن کي چوندا آهن؟", o:["واپاري","استاد","مزارع/هاري","مالڪ"], a:2},
+      {q:"سنڌي صوفي شاعريءَ جو مرڪزي موضوع:", o:["جنگ","تجارت","سياست","الاهي محبت"], a:3},
+      {q:"'بيت' ڪهڙي صنف آهي؟", o:["نثر","ناول","افسانو","شاعريءَ جي صنف"], a:3},
+      {q:"سنڌيءَ ادب ۾ 'آزاد نظم' ڪڏهن آئي؟", o:["مغل دور ۾","قديم دور ۾","19هين صديءَ ۾","20هين صديءَ ۾"], a:3},
+      {q:"'شاهه جو رسالو' جون ڪيتريون ٻوليون آهن؟", o:["صرف سنڌي","سنڌي ۽ عربي","متعدد (سنڌي، سرائيڪي، عربي)","صرف عربي"], a:2},
+    ],
+  },
+  Computer: {
+    2: [
+      {q:"CPU stands for:", o:["Central Programming Unit","Computer Processing Unit","Central Processor Unit","Central Processing Unit"], a:3},
+      {q:"Which is an INPUT device?", o:["Monitor","Printer","Speaker","Keyboard"], a:3},
+      {q:"Which is an OUTPUT device?", o:["Mouse","Keyboard","Scanner","Monitor"], a:3},
+      {q:"RAM stands for:", o:["Random Access Memory","Read All Memory","Read Access Mode","Remote Access Memory"], a:0},
+      {q:"The brain of a computer is:", o:["RAM","Hard Disk","Monitor","CPU"], a:3},
+      {q:"Which of these is a web browser?", o:["MS Word","Excel","PowerPoint","Google Chrome"], a:3},
+      {q:"What does 'www' stand for?", o:["Wide World Web","World Wide Web","Web World Wide","World Web Wide"], a:1},
+      {q:"A computer virus is:", o:["Hardware problem","Printer error","Internet cable","Harmful software program"], a:3},
+      {q:"Which stores data permanently?", o:["RAM","Cache","Register","Hard Disk"], a:3},
+      {q:"MS Word is used for:", o:["Drawing","Calculations","Database","Word processing"], a:3},
+      {q:"Which is NOT an operating system?", o:["Windows","Linux","Android","MS Word"], a:3},
+      {q:"E-mail stands for:", o:["Early mail","External mail","Easy mail","Electronic mail"], a:3},
+      {q:"Which key undoes the last action?", o:["Ctrl+Z","Ctrl+C","Ctrl+V","Ctrl+S"], a:0},
+      {q:"The internet uses which protocol?", o:["HTTP","FTP","SSH","TCP/IP"], a:3},
+      {q:"Which is a programming language?", o:["HTML is markup, but also...","Excel","Word","PowerPoint"], a:0},
+    ],
+    3: [
+      {q:"HTML stands for:", o:["Hyper Transfer Markup Language","High Tech Markup Language","Hyperlink and Text Markup Language","HyperText Markup Language"], a:3},
+      {q:"Which data structure works as LIFO?", o:["Queue","Array","Linked List","Stack"], a:3},
+      {q:"Which is a relational database?", o:["MS Excel","MS Word","Notepad","MySQL"], a:3},
+      {q:"In binary, 10 represents:", o:["3","4","1","2"], a:3},
+      {q:"What is an IP address?", o:["Computer name","Unique numerical identifier for network device","Password","Wi-Fi name"], a:1},
+      {q:"Which language is used for web STYLING?", o:["Python","Java","HTML","CSS"], a:3},
+      {q:"Bit stands for:", o:["Big Integer","Binary Digit","Byte Integer","Basic Input"], a:1},
+      {q:"Which is NOT a type of network?", o:["LAN","WAN","MAN","CAD"], a:3},
+      {q:"Object-Oriented Programming supports:", o:["Only functions","No loops","Linear programming","Encapsulation, Inheritance, Polymorphism"], a:3},
+      {q:"Which key copies selected text?", o:["Ctrl+V","Ctrl+X","Ctrl+Z","Ctrl+C"], a:3},
+      {q:"What is a 'bug' in programming?", o:["A virus","Extra memory","A feature","An error in code"], a:3},
+      {q:"Which sorting algorithm is FASTEST on average?", o:["Bubble Sort","Selection Sort","Insertion Sort","Quick Sort"], a:3},
+      {q:"What does HTTP stand for?", o:["HyperText Transfer Protocol","High Transfer Text Protocol","Hyper Tool Transfer Protocol","HyperText Transmission Protocol"], a:0},
+      {q:"Which is a high-level programming language?", o:["Machine Code","Assembly Language","Binary","Python"], a:3},
+      {q:"Firewall is used for:", o:["Printing faster","Increasing RAM","Network security","Data storage"], a:2},
+    ],
+    4: [
+      {q:"Which algorithm has O(n log n) average time complexity?", o:["Bubble Sort","Selection Sort","Insertion Sort","Merge Sort"], a:3},
+      {q:"In OOP, 'Encapsulation' means:", o:["Inheriting from parent","Running in parallel","Multiple outputs","Hiding internal data/implementation"], a:3},
+      {q:"SQL query to select all from table 'students':", o:["FETCH * students","GET ALL students","SHOW students","SELECT * FROM students"], a:3},
+      {q:"Which is a NoSQL database?", o:["MySQL","PostgreSQL","Oracle","MongoDB"], a:3},
+      {q:"TCP vs UDP: TCP is:", o:["Faster but unreliable","Connectionless","No acknowledgement","Reliable, connection-oriented"], a:3},
+      {q:"What is 'polymorphism' in OOP?", o:["Hiding data","Multiple inheritance","Same method name, different behaviors","Creating objects"], a:2},
+      {q:"In binary, 1111 equals:", o:["8","12","10","15"], a:3},
+      {q:"Which protocol sends email?", o:["HTTP","FTP","IMAP","SMTP"], a:3},
+      {q:"Recursion in programming means:", o:["Infinite loop","Parallel processing","Error handling","Function calling itself"], a:3},
+      {q:"Cloud computing provides:", o:["Physical hardware only","Local processing","No internet needed","On-demand computing resources via internet"], a:3},
+      {q:"Which is a cybersecurity attack?", o:["Defragmentation","Caching","Compiler error","Phishing"], a:3},
+      {q:"Machine Learning is a subset of:", o:["Web Development","Networking","Database","Artificial Intelligence"], a:3},
+      {q:"Virtual memory is:", o:["Extra RAM chips","Part of CPU","Physical storage","Disk space used as RAM"], a:3},
+      {q:"Which data structure is used for BFS?", o:["Stack","Array","Tree","Queue"], a:3},
+      {q:"The hexadecimal number 'F' equals decimal:", o:["10","12","13","15"], a:3},
+    ],
+  },
+};
+
+// ============================================================
+//  APP STATE
+// ============================================================
+let student = {};
+let studentPhotoBase64 = null;
+let classNum = 1;
+let level = 1;
+let subjects = [];
+let subjectQueue = [];
+let currentSubjectIdx = 0;
+let currentQuestions = [];
+let currentQIdx = 0;
+let answered = false;
+let results = {}; // subject -> { score, total }
+
+// ============================================================
+//  SUBJECT CONFIG
+// ============================================================
+const subjectMeta = {
+  English:    { icon:'📖', cls:'s-english', color:'#3b82f6' },
+  Urdu:       { icon:'✍️', cls:'s-urdu', color:'#8b5cf6' },
+  Math:       { icon:'🔢', cls:'s-math', color:'#10b981' },
+  Science:    { icon:'🔬', cls:'s-science', color:'#f59e0b' },
+  Sindhi:     { icon:'🌊', cls:'s-sindhi', color:'#ec4899' },
+  Islamiyat:  { icon:'🕌', cls:'s-islamiyat', color:'#14b8a6' },
+  Computer:   { icon:'💻', cls:'s-computer', color:'#6366f1' },
+  SST:        { icon:'🌍', cls:'s-sst', color:'#f97316' },
+};
+
+function getLevel(cls) {
+  if (cls <= 3) return 1;
+  if (cls <= 6) return 2;
+  if (cls <= 8) return 3;
+  return 4;
+}
+
+function getSubjectsForClass(cls) {
+  const base = ['English','Urdu','Math','Science','Islamiyat','SST'];
+  if (cls >= 4) base.push('Sindhi');
+  if (cls >= 6) base.push('Computer');
+  return base;
+}
+
+// ============================================================
+//  PHOTO HANDLING
+// ============================================================
+function handlePhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    studentPhotoBase64 = e.target.result;
+    document.getElementById('photoPreview').src = studentPhotoBase64;
+    document.getElementById('photoArea').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============================================================
+//  FORM VALIDATION & START
+// ============================================================
+function startQuiz() {
+  const name = document.getElementById('studentName').value.trim();
+  const father = document.getElementById('fatherName').value.trim();
+  const cls = parseInt(document.getElementById('studentClass').value);
+  const roll = document.getElementById('rollNum').value.trim();
+  const date = document.getElementById('examDate').value;
+
+  if (!name || !father || !cls || !roll) {
+    alert('⚠️ Please fill all required fields!');
+    return;
+  }
+
+  classNum = cls;
+  level = getLevel(cls);
+  student = { name, father, cls, roll, date: date || new Date().toLocaleDateString('en-PK') };
+
+  subjects = getSubjectsForClass(cls);
+  results = {};
+  subjects.forEach(s => results[s] = { score: 0, total: 10 });
+
+  showScreen('screen-subjects');
+  renderSubjectSelection();
+}
+
+function renderSubjectSelection() {
+  const grid = document.getElementById('subjectsGrid');
+  const info = document.getElementById('subjInfo');
+  info.textContent = `Class ${classNum} — ${subjects.length} subjects | Each has 10 questions`;
+  grid.innerHTML = '';
+  subjects.forEach(subj => {
+    const m = subjectMeta[subj];
+    const btn = document.createElement('div');
+    btn.className = `subj-btn ${m.cls}`;
+    btn.innerHTML = `<span class="icon">${m.icon}</span><span class="name">${subj}</span><span class="qs">10 Random Questions</span>`;
+    grid.appendChild(btn);
+  });
+}
+
+function startAllSubjects() {
+  subjectQueue = [...subjects];
+  currentSubjectIdx = 0;
+  results = {};
+  subjects.forEach(s => results[s] = { score: 0, total: 10 });
+  loadSubject();
+}
+
+// ============================================================
+//  QUIZ LOGIC
+// ============================================================
+function loadSubject() {
+  if (currentSubjectIdx >= subjectQueue.length) {
+    showResults();
+    return;
+  }
+  const subj = subjectQueue[currentSubjectIdx];
+  const pool = QB[subj][level] || QB[subj][Math.max(...Object.keys(QB[subj]).map(Number))];
+  currentQuestions = shuffle([...pool]).slice(0, 10);
+  currentQIdx = 0;
+  answered = false;
+  showScreen('screen-quiz');
+  renderSubjectProgress();
+  loadQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderSubjectProgress() {
+  const div = document.getElementById('subjectProgress');
+  div.innerHTML = subjectQueue.map((s, i) => {
+    let cls = 'subj-dot';
+    if (i < currentSubjectIdx) cls += ' done';
+    else if (i === currentSubjectIdx) cls += ' active';
+    return `<span class="${cls}">${subjectMeta[s].icon} ${s}</span>`;
+  }).join('');
+}
+
+function loadQuestion() {
+  const subj = subjectQueue[currentSubjectIdx];
+  const m = subjectMeta[subj];
+  const q = currentQuestions[currentQIdx];
+  const total = currentQuestions.length;
+
+  document.getElementById('quizSubjectTitle').innerHTML = `${m.icon} ${subj}`;
+  document.getElementById('quizCounter').textContent = `${currentQIdx + 1} / ${total}`;
+  document.getElementById('progressBar').style.width = `${((currentQIdx + 1) / total) * 100}%`;
+  document.getElementById('qNum').textContent = `Question ${currentQIdx + 1} of ${total}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qText').style.direction = isArabicText(q.q) ? 'rtl' : 'ltr';
+
+  const letters = ['A','B','C','D'];
+  const optDiv = document.getElementById('optionsDiv');
+  optDiv.innerHTML = '';
+  q.o.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.idx = idx;
+    btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span><span style="direction:${isArabicText(opt)?'rtl':'ltr'}">${opt}</span>`;
+    btn.onclick = () => selectAnswer(idx);
+    optDiv.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBar').className = 'feedback-bar';
+  document.getElementById('feedbackBar').style.display = 'none';
+  document.getElementById('btnNext').className = 'btn-next';
+  document.getElementById('btnNext').textContent = currentQIdx < total - 1 ? 'اگلا سوال ➡️' :
+    (currentSubjectIdx < subjectQueue.length - 1 ? `اگلا مضمون: ${subjectMeta[subjectQueue[currentSubjectIdx+1]]?.icon} ${subjectQueue[currentSubjectIdx+1]} ➡️` : '✅ نتائج دیکھیں');
+  answered = false;
+}
+
+function isArabicText(text) {
+  return /[\u0600-\u06FF\u0750-\u077F]/.test(text);
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = currentQuestions[currentQIdx];
+  const correct = q.a;
+  const subj = subjectQueue[currentSubjectIdx];
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach(b => b.classList.add('disabled'));
+
+  if (idx === correct) {
+    btns[idx].classList.add('correct');
+    results[subj].score++;
+    const fb = document.getElementById('feedbackBar');
+    fb.className = 'feedback-bar correct';
+    fb.innerHTML = '✅ <strong>Bilkul Sahi!</strong> بالکل صحیح!';
+    fb.style.display = 'flex';
+  } else {
+    btns[idx].classList.add('wrong');
+    btns[correct].classList.add('show-correct');
+    const fb = document.getElementById('feedbackBar');
+    fb.className = 'feedback-bar wrong';
+    fb.innerHTML = `❌ <strong>غلط!</strong> صحیح جواب: <strong>${q.o[correct]}</strong>`;
+    fb.style.display = 'flex';
+  }
+  document.getElementById('btnNext').classList.add('show');
+}
+
+function nextQuestion() {
+  currentQIdx++;
+  if (currentQIdx >= currentQuestions.length) {
+    currentSubjectIdx++;
+    if (currentSubjectIdx >= subjectQueue.length) {
+      showResults();
+    } else {
+      loadSubject();
+    }
+  } else {
+    loadQuestion();
+  }
+}
+
+// ============================================================
+//  GRADE SYSTEM
+// ============================================================
+function getGrade(pct) {
+  if (pct >= 90) return { g:'A+', cls:'grade-a-plus', remark:'Outstanding! شاندار!' };
+  if (pct >= 80) return { g:'A',  cls:'grade-a',     remark:'Excellent! بہترین!' };
+  if (pct >= 70) return { g:'B+', cls:'grade-b-plus', remark:'Very Good! بہت اچھا!' };
+  if (pct >= 60) return { g:'B',  cls:'grade-b',     remark:'Good! اچھا!' };
+  if (pct >= 50) return { g:'C',  cls:'grade-c',     remark:'Satisfactory. ٹھیک ہے' };
+  if (pct >= 40) return { g:'D',  cls:'grade-d',     remark:'Needs Improvement. محنت کریں' };
+  return               { g:'F',  cls:'grade-f',     remark:'Fail. دوبارہ کوشش کریں' };
+}
+
+// ============================================================
+//  RESULTS SCREEN
+// ============================================================
+function showResults() {
+  showScreen('screen-results');
+  let totalScore = 0, totalMax = 0;
+  subjectQueue.forEach(s => {
+    totalScore += results[s].score;
+    totalMax += results[s].total;
+  });
+  const overallPct = Math.round((totalScore / totalMax) * 100);
+  const overall = getGrade(overallPct);
+
+  const photoHtml = studentPhotoBase64
+    ? `<img class="student-photo" src="${studentPhotoBase64}" alt="Student">`
+    : `<div class="student-photo-placeholder">👤</div>`;
+
+  let tableRows = subjectQueue.map(s => {
+    const sc = results[s].score;
+    const pct = Math.round((sc / results[s].total) * 100);
+    const g = getGrade(pct);
+    return `<tr>
+      <td><strong>${subjectMeta[s].icon} ${s}</strong></td>
+      <td>${sc} / ${results[s].total}</td>
+      <td>${pct}%</td>
+      <td><span class="grade-badge ${g.cls}">${g.g}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('resultsBody').innerHTML = `
+    <div class="student-info-row">
+      ${photoHtml}
+      <div class="student-details">
+        <div class="detail-item"><div class="label">Student Name</div><div class="value">${student.name}</div></div>
+        <div class="detail-item"><div class="label">Father's Name</div><div class="value">${student.father}</div></div>
+        <div class="detail-item"><div class="label">Class</div><div class="value">Class ${student.cls}</div></div>
+        <div class="detail-item"><div class="label">Roll No.</div><div class="value">${student.roll}</div></div>
+        <div class="detail-item"><div class="label">Date</div><div class="value">${student.date}</div></div>
+      </div>
+    </div>
+    <table class="results-table">
+      <thead><tr><th>Subject</th><th>Score</th><th>Percentage</th><th>Grade</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+    <div class="overall-box">
+      <div class="overall-stat"><div class="num">${totalScore}/${totalMax}</div><div class="lbl">Total Marks</div></div>
+      <div class="overall-stat"><div class="num">${overallPct}%</div><div class="lbl">Percentage</div></div>
+      <div class="overall-stat"><div class="num">${overall.g}</div><div class="lbl">Overall Grade</div></div>
+    </div>
+    <div class="remarks-box">
+      <div class="r-label">📝 REMARKS</div>
+      <div class="r-text">${overall.remark}</div>
+    </div>
+    <button class="btn-pdf" onclick="generatePDF()">📄 PDF ڈاؤنلوڈ کریں — Download Report Card</button>
+    <button class="btn-retry" onclick="retryExam()">🔄 دوبارہ امتحان دیں — Retry Exam</button>
+  `;
+}
+
+function retryExam() {
+  results = {};
+  subjectQueue = [];
+  currentSubjectIdx = 0;
+  currentQIdx = 0;
+  showScreen('screen-form');
+}
+
+// ============================================================
+//  PDF GENERATION
+// ============================================================
+async function generatePDF() {
+  const overlay = document.getElementById('loadingOverlay');
+  const msg = document.getElementById('loadingMsg');
+  overlay.classList.add('active');
+  msg.textContent = 'PDF بن رہا ہے... برائے مہربانی انتظار کریں';
+
+  await new Promise(r => setTimeout(r, 100));
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210, margin = 15;
+    let y = 0;
+
+    // ----- HEADER -----
+    doc.setFillColor(13, 27, 75);
+    doc.rect(0, 0, W, 38, 'F');
+    doc.setFillColor(245, 166, 35);
+    doc.rect(0, 38, W, 3, 'F');
+
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(20);
+    doc.text('PAKISTAN SCHOOL EXAM REPORT CARD', W/2, 14, {align:'center'});
+    doc.setFontSize(11);
+    doc.setFont('helvetica','normal');
+    doc.text('Online Examination System | آن لائن امتحان', W/2, 22, {align:'center'});
+    doc.setFontSize(9);
+    doc.text(`Exam Date: ${student.date}`, W/2, 30, {align:'center'});
+
+    y = 50;
+
+    // ----- STUDENT INFO BOX -----
+    doc.setFillColor(240, 244, 255);
+    doc.roundedRect(margin, y, W - margin*2, 44, 4, 4, 'F');
+    doc.setDrawColor(26,86,187);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, W - margin*2, 44, 4, 4, 'S');
+
+    // Student Photo
+    const photoX = W - margin - 32;
+    if (studentPhotoBase64) {
+      try {
+        doc.addImage(studentPhotoBase64, 'JPEG', photoX, y + 4, 28, 36);
+        doc.setDrawColor(26,86,187);
+        doc.rect(photoX, y + 4, 28, 36, 'S');
+      } catch(e) {
+        drawPhotoPlaceholder(doc, photoX, y + 4, 28, 36);
+      }
+    } else {
+      drawPhotoPlaceholder(doc, photoX, y + 4, 28, 36);
+    }
+
+    // Student Details
+    doc.setTextColor(100, 116, 139);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    const infoX = margin + 6;
+    doc.text('STUDENT NAME:', infoX, y + 11);
+    doc.text("FATHER'S NAME:", infoX, y + 21);
+    doc.text('CLASS:', infoX, y + 31);
+    doc.text('ROLL NO.:', infoX + 40, y + 31);
+
+    doc.setTextColor(30, 41, 59);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text(student.name, infoX + 32, y + 11);
+    doc.text(student.father, infoX + 35, y + 21);
+    doc.setFontSize(10);
+    doc.text(`Class ${student.cls}`, infoX + 14, y + 31);
+    doc.text(student.roll, infoX + 55, y + 31);
+
+    // Level badge
+    doc.setFillColor(26,86,187);
+    doc.roundedRect(infoX, y + 35, 50, 7, 2, 2, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(8);
+    const lvlNames = {1:'Easy Level (1-3)', 2:'Medium Level (4-6)', 3:'Hard Level (7-8)', 4:'Extreme Level (9-10)'};
+    doc.text(lvlNames[level], infoX + 25, y + 40, {align:'center'});
+
+    y += 52;
+
+    // ----- RESULTS TABLE -----
+    doc.setFillColor(13,27,75);
+    doc.rect(margin, y, W - margin*2, 10, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9);
+    const colW = [(W - margin*2) * 0.35, (W - margin*2) * 0.20, (W - margin*2) * 0.22, (W - margin*2) * 0.23];
+    const colX = [margin, margin + colW[0], margin + colW[0]+colW[1], margin + colW[0]+colW[1]+colW[2]];
+    doc.text('SUBJECT', colX[0] + 3, y + 6.5);
+    doc.text('SCORE', colX[1] + 3, y + 6.5);
+    doc.text('PERCENTAGE', colX[2] + 3, y + 6.5);
+    doc.text('GRADE', colX[3] + 3, y + 6.5);
+
+    y += 10;
+    subjectQueue.forEach((s, i) => {
+      const sc = results[s].score;
+      const pct = Math.round((sc / results[s].total) * 100);
+      const g = getGrade(pct);
+      const rowBg = i % 2 === 0 ? [248,250,255] : [255,255,255];
+      doc.setFillColor(...rowBg);
+      doc.rect(margin, y, W - margin*2, 9, 'F');
+      doc.setTextColor(30,41,59);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.text(s, colX[0] + 3, y + 6);
+      doc.text(`${sc} / ${results[s].total}`, colX[1] + 3, y + 6);
+      doc.text(`${pct}%`, colX[2] + 3, y + 6);
+
+      // Grade badge
+      const gc = gradeColor(g.g);
+      doc.setFillColor(...gc.bg);
+      doc.roundedRect(colX[3] + 3, y + 1.5, 18, 6, 2, 2, 'F');
+      doc.setTextColor(...gc.text);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.text(g.g, colX[3] + 12, y + 6, {align:'center'});
+
+      doc.setDrawColor(226,232,240);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y + 9, W - margin, y + 9);
+      y += 9;
+    });
+
+    y += 8;
+
+    // ----- OVERALL BOX -----
+    let totalScore = 0, totalMax = 0;
+    subjectQueue.forEach(s => { totalScore += results[s].score; totalMax += results[s].total; });
+    const overallPct = Math.round((totalScore / totalMax) * 100);
+    const overall = getGrade(overallPct);
+
+    doc.setFillColor(240, 244, 255);
+    doc.roundedRect(margin, y, W - margin*2, 28, 4, 4, 'F');
+    doc.setDrawColor(26,86,187);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, W - margin*2, 28, 4, 4, 'S');
+
+    const boxW = (W - margin*2) / 3;
+    const titles = ['TOTAL MARKS', 'PERCENTAGE', 'OVERALL GRADE'];
+    const values = [`${totalScore} / ${totalMax}`, `${overallPct}%`, overall.g];
+    titles.forEach((t, i) => {
+      const bx = margin + boxW * i + boxW/2;
+      doc.setTextColor(100,116,139);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7);
+      doc.text(t, bx, y + 9, {align:'center'});
+      doc.setTextColor(13,27,75);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(16);
+      doc.text(values[i], bx, y + 22, {align:'center'});
+      if (i < 2) {
+        doc.setDrawColor(200,210,230);
+        doc.line(margin + boxW * (i+1), y + 4, margin + boxW * (i+1), y + 24);
+      }
+    });
+    y += 36;
+
+    // ----- REMARKS BOX -----
+    doc.setFillColor(254, 243, 199);
+    doc.roundedRect(margin, y, W - margin*2, 18, 4, 4, 'F');
+    doc.setDrawColor(245,158,11);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, W - margin*2, 18, 4, 4, 'S');
+    doc.setTextColor(120, 53, 15);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.text('REMARKS', W/2, y + 6, {align:'center'});
+    doc.setFontSize(13);
+    doc.text(overall.remark.split('!')[0] + '!', W/2, y + 14, {align:'center'});
+
+    y += 26;
+
+    // ----- SIGNATURES -----
+    doc.setDrawColor(200,210,230);
+    doc.setLineWidth(0.3);
+    const sigY = y + 15;
+    const sigPositions = [margin + 20, W/2 - 20, W - margin - 40];
+    const sigLabels = ["Class Teacher's Sign", "Principal's Sign", "Parent's Sign"];
+    sigPositions.forEach((sx, i) => {
+      doc.line(sx, sigY, sx + 40, sigY);
+      doc.setTextColor(100,116,139);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7);
+      doc.text(sigLabels[i], sx + 20, sigY + 4, {align:'center'});
+    });
+
+    // ----- FOOTER -----
+    doc.setFillColor(13,27,75);
+    doc.rect(0, 282, W, 15, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.text('Pakistan School Online Exam System | Generated Automatically', W/2, 290, {align:'center'});
+    doc.text(`Page 1 of 1`, W - margin, 290, {align:'right'});
+
+    doc.save(`Report_Card_${student.name.replace(/\s+/g,'_')}_Class${student.cls}.pdf`);
+  } catch(e) {
+    console.error(e);
+    alert('PDF generation failed. Please try again.');
+  }
+
+  overlay.classList.remove('active');
+}
+
+function drawPhotoPlaceholder(doc, x, y, w, h) {
+  doc.setFillColor(219, 234, 254);
+  doc.rect(x, y, w, h, 'F');
+  doc.setDrawColor(26,86,187);
+  doc.rect(x, y, w, h, 'S');
+  doc.setTextColor(100,116,139);
+  doc.setFontSize(18);
+  doc.text('?', x + w/2, y + h/2 + 3, {align:'center'});
+  doc.setFontSize(6);
+  doc.text('No Photo', x + w/2, y + h - 3, {align:'center'});
+}
+
+function gradeColor(g) {
+  switch(g) {
+    case 'A+': return { bg:[220,252,231], text:[22,101,52] };
+    case 'A':  return { bg:[219,234,254], text:[30,64,175] };
+    case 'B+': return { bg:[237,233,254], text:[109,40,217] };
+    case 'B':  return { bg:[254,249,195], text:[133,77,14] };
+    case 'C':  return { bg:[255,237,213], text:[154,52,18] };
+    case 'D':  return { bg:[254,226,226], text:[153,27,27] };
+    default:   return { bg:[55,65,81],   text:[255,255,255] };
+  }
+}
+
+// ============================================================
+//  SCREEN HELPER
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Set today's date as default
+document.getElementById('examDate').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
